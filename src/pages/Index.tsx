@@ -1,12 +1,26 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -24,8 +38,22 @@ const Index = () => {
             <a href="#" className="text-foreground hover:text-primary transition-colors">How it Works</a>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost">Login</Button>
-            <Button>Sign Up</Button>
+            {user ? (
+              <>
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  Welcome, {user.user_metadata?.full_name || user.email}
+                </span>
+                <Button variant="ghost" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/auth')}>Login</Button>
+                <Button onClick={() => navigate('/auth')}>Sign Up</Button>
+              </>
+            )}
           </div>
         </div>
       </nav>
