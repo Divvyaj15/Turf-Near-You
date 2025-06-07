@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus } from 'lucide-react';
+import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus, MapPin, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import AddTurfForm from '@/components/AddTurfForm';
+import { useOwnerTurfs } from '@/hooks/useTurfs';
 
 interface TurfOwnerData {
   id: string;
@@ -27,6 +29,9 @@ const OwnerDashboard = () => {
   const { toast } = useToast();
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAddTurf, setShowAddTurf] = useState(false);
+  
+  const { data: turfs = [], refetch: refetchTurfs } = useOwnerTurfs();
 
   useEffect(() => {
     if (!user) {
@@ -70,6 +75,24 @@ const OwnerDashboard = () => {
       description: "You have been signed out successfully.",
     });
   };
+
+  const handleAddTurfSuccess = () => {
+    setShowAddTurf(false);
+    refetchTurfs();
+    toast({
+      title: "Success!",
+      description: "Your turf has been added successfully.",
+    });
+  };
+
+  if (showAddTurf) {
+    return (
+      <AddTurfForm 
+        onBack={() => setShowAddTurf(false)}
+        onSuccess={handleAddTurfSuccess}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -182,7 +205,7 @@ const OwnerDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Turfs</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{turfs.length}</p>
                 </div>
                 <Building2 className="w-8 h-8 text-purple-500" />
               </div>
@@ -202,9 +225,80 @@ const OwnerDashboard = () => {
           </Card>
         </div>
 
+        {/* My Turfs Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold">My Turfs</h3>
+            <Button onClick={() => setShowAddTurf(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Turf
+            </Button>
+          </div>
+
+          {turfs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {turfs.map((turf) => (
+                <Card key={turf.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    {turf.cover_image_url && (
+                      <img
+                        src={turf.cover_image_url}
+                        alt={turf.name}
+                        className="w-full h-32 object-cover rounded-lg mb-3"
+                      />
+                    )}
+                    <h4 className="font-semibold text-lg mb-2">{turf.name}</h4>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {turf.area}
+                      </div>
+                      <div className="flex items-center">
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        ₹{turf.base_price_per_hour}/hour
+                      </div>
+                      {turf.capacity && (
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          Up to {turf.capacity} players
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Badge variant="outline" className="text-xs">
+                        {turf.status === 'active' ? 'Active' : 'Inactive'}
+                      </Badge>
+                      {turf.supported_sports.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {turf.supported_sports[0]}
+                          {turf.supported_sports.length > 1 && ` +${turf.supported_sports.length - 1}`}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h4 className="text-lg font-semibold mb-2">No Turfs Added Yet</h4>
+                <p className="text-muted-foreground mb-4">
+                  Start by adding your first turf to begin accepting bookings
+                </p>
+                <Button onClick={() => setShowAddTurf(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Turf
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setShowAddTurf(true)}>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Plus className="w-5 h-5 mr-2 text-primary" />

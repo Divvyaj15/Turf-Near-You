@@ -96,6 +96,89 @@ export type Database = {
         }
         Relationships: []
       }
+      turfs: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          area: string
+          base_price_per_hour: number
+          capacity: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          name: string
+          owner_id: string
+          peak_hours_end: string | null
+          peak_hours_premium_percentage: number | null
+          peak_hours_start: string | null
+          status: string | null
+          supported_sports: string[] | null
+          surface_type: string | null
+          updated_at: string | null
+          weekend_premium_percentage: number | null
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          area: string
+          base_price_per_hour: number
+          capacity?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          name: string
+          owner_id: string
+          peak_hours_end?: string | null
+          peak_hours_premium_percentage?: number | null
+          peak_hours_start?: string | null
+          status?: string | null
+          supported_sports?: string[] | null
+          surface_type?: string | null
+          updated_at?: string | null
+          weekend_premium_percentage?: number | null
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          area?: string
+          base_price_per_hour?: number
+          capacity?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          name?: string
+          owner_id?: string
+          peak_hours_end?: string | null
+          peak_hours_premium_percentage?: number | null
+          peak_hours_start?: string | null
+          status?: string | null
+          supported_sports?: string[] | null
+          surface_type?: string | null
+          updated_at?: string | null
+          weekend_premium_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turfs_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "turf_owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
