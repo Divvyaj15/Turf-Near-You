@@ -8,25 +8,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import RoleSelection from '@/components/RoleSelection';
+import OwnerRegistrationForm from '@/components/OwnerRegistrationForm';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'customer' | 'turf_owner' | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete'>('auth');
   
-  const { signUp, signIn, user } = useAuth();
+  const { signUp, signIn, user, userRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect based on user role
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (user && userRole) {
+      if (userRole === 'turf_owner') {
+        navigate('/owner-dashboard');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, navigate]);
+  }, [user, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,14 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        result = await signUp(email, password, fullName);
+        
+        if (!selectedRole) {
+          setStep('role');
+          setIsLoading(false);
+          return;
+        }
+        
+        result = await signUp(email, password, fullName, selectedRole);
       } else {
         result = await signIn(email, password);
       }
@@ -57,16 +72,19 @@ const Auth = () => {
         });
       } else {
         if (isSignUp) {
-          toast({
-            title: "Success",
-            description: "Account created successfully! Please check your email to verify your account.",
-          });
+          if (selectedRole === 'turf_owner') {
+            setStep('owner-details');
+          } else {
+            toast({
+              title: "Success",
+              description: "Account created successfully! Please check your email to verify your account.",
+            });
+          }
         } else {
           toast({
             title: "Success",
             description: "Logged in successfully!",
           });
-          navigate('/');
         }
       }
     } catch (error) {
@@ -79,6 +97,88 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setFullName('');
+    setSelectedRole(null);
+    setStep('auth');
+    setIsSignUp(false);
+  };
+
+  const handleRoleSelect = (role: 'customer' | 'turf_owner') => {
+    setSelectedRole(role);
+    setStep('auth');
+  };
+
+  const handleOwnerRegistrationComplete = () => {
+    setStep('complete');
+    toast({
+      title: "Registration Complete!",
+      description: "Your application has been submitted. We'll review it within 24-48 hours.",
+    });
+  };
+
+  if (step === 'role') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl">
+          <Button 
+            variant="ghost" 
+            className="text-white hover:bg-white/10 mb-6"
+            onClick={() => setStep('auth')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Sign Up
+          </Button>
+
+          <Card className="shadow-2xl">
+            <CardContent className="p-8">
+              <RoleSelection 
+                selectedRole={selectedRole}
+                onRoleSelect={handleRoleSelect}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'owner-details') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl">
+          <OwnerRegistrationForm 
+            onBack={() => setStep('auth')}
+            onComplete={handleOwnerRegistrationComplete}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'complete') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center shadow-2xl">
+          <CardContent className="p-8">
+            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">✓</span>
+            </div>
+            <h3 className="text-xl font-semibold mb-4">Application Submitted!</h3>
+            <p className="text-muted-foreground mb-6">
+              Thank you for registering as a turf owner. Our team will review your application within 24-48 hours and send you an email with the next steps.
+            </p>
+            <Button onClick={() => navigate('/')} className="w-full">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
@@ -110,6 +210,24 @@ const Auth = () => {
                 : 'Sign in to book turfs and find players'
               }
             </p>
+            {isSignUp && selectedRole && (
+              <div className="mt-4">
+                <span className="text-sm text-muted-foreground">
+                  Creating account as: 
+                </span>
+                <span className="ml-2 text-sm font-medium capitalize">
+                  {selectedRole.replace('_', ' ')}
+                </span>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="ml-2 p-0 h-auto text-primary"
+                  onClick={() => setStep('role')}
+                >
+                  Change
+                </Button>
+              </div>
+            )}
           </CardHeader>
           
           <CardContent>
@@ -184,9 +302,7 @@ const Auth = () => {
                   className="ml-2 p-0 h-auto text-primary"
                   onClick={() => {
                     setIsSignUp(!isSignUp);
-                    setEmail('');
-                    setPassword('');
-                    setFullName('');
+                    resetForm();
                   }}
                 >
                   {isSignUp ? 'Sign In' : 'Sign Up'}

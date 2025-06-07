@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield, LogOut } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield, LogOut, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,6 +19,15 @@ const Index = () => {
       title: "Signed out",
       description: "You have been signed out successfully.",
     });
+  };
+
+  const handleDashboardNavigation = () => {
+    if (userRole === 'turf_owner') {
+      navigate('/owner-dashboard');
+    } else {
+      // For now, redirect to home since customer dashboard isn't implemented yet
+      navigate('/');
+    }
   };
 
   return (
@@ -43,6 +52,12 @@ const Index = () => {
                 <span className="text-sm text-muted-foreground hidden sm:block">
                   Welcome, {user.user_metadata?.full_name || user.email}
                 </span>
+                {userRole === 'turf_owner' && (
+                  <Button variant="ghost" onClick={handleDashboardNavigation}>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
@@ -94,6 +109,21 @@ const Index = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Call to Action for Turf Owners */}
+            {!user && (
+              <div className="mt-8 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                <p className="text-lg mb-4">Own a turf? Join our platform and grow your business!</p>
+                <Button 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-primary"
+                  onClick={() => navigate('/auth')}
+                >
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Register Your Turf
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         

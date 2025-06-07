@@ -19,6 +19,7 @@ export type Database = {
           location: string | null
           phone: string | null
           preferred_sports: string[] | null
+          role: Database["public"]["Enums"]["user_role"] | null
           skill_levels: Json | null
           updated_at: string
         }
@@ -31,6 +32,7 @@ export type Database = {
           location?: string | null
           phone?: string | null
           preferred_sports?: string[] | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           skill_levels?: Json | null
           updated_at?: string
         }
@@ -43,8 +45,54 @@ export type Database = {
           location?: string | null
           phone?: string | null
           preferred_sports?: string[] | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           skill_levels?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      turf_owners: {
+        Row: {
+          address: string | null
+          business_name: string
+          business_type: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          owner_name: string
+          updated_at: string | null
+          user_id: string
+          verification_status: string | null
+          years_of_operation: number | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          business_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          owner_name: string
+          updated_at?: string | null
+          user_id: string
+          verification_status?: string | null
+          years_of_operation?: number | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          business_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          owner_name?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_status?: string | null
+          years_of_operation?: number | null
         }
         Relationships: []
       }
@@ -56,7 +104,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "customer" | "turf_owner" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -171,6 +219,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["customer", "turf_owner", "admin"],
+    },
   },
 } as const
