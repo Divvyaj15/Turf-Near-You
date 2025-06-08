@@ -20,6 +20,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete'>('auth');
+  const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string} | null>(null);
   
   const { signUp, signIn, user, userRole } = useAuth();
   const { toast } = useToast();
@@ -59,6 +60,15 @@ const Auth = () => {
           return;
         }
         
+        // For turf owner, store temp data and go to owner details
+        if (selectedRole === 'turf_owner') {
+          setTempUserData({ email, password, fullName });
+          setStep('owner-details');
+          setIsLoading(false);
+          return;
+        }
+        
+        // For customer, proceed with normal signup
         result = await signUp(email, password, fullName, selectedRole);
       } else {
         result = await signIn(email, password);
@@ -71,16 +81,12 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
-        if (isSignUp) {
-          if (selectedRole === 'turf_owner') {
-            setStep('owner-details');
-          } else {
-            toast({
-              title: "Success",
-              description: "Account created successfully! Please check your email to verify your account.",
-            });
-          }
-        } else {
+        if (isSignUp && selectedRole === 'customer') {
+          toast({
+            title: "Success",
+            description: "Account created successfully! Please check your email to verify your account.",
+          });
+        } else if (!isSignUp) {
           toast({
             title: "Success",
             description: "Logged in successfully!",
@@ -105,6 +111,7 @@ const Auth = () => {
     setSelectedRole(null);
     setStep('auth');
     setIsSignUp(false);
+    setTempUserData(null);
   };
 
   const handleRoleSelect = (role: 'customer' | 'turf_owner') => {
@@ -112,12 +119,40 @@ const Auth = () => {
     setStep('auth');
   };
 
-  const handleOwnerRegistrationComplete = () => {
-    setStep('complete');
-    toast({
-      title: "Registration Complete!",
-      description: "Your application has been submitted. We'll review it within 24-48 hours.",
-    });
+  const handleOwnerRegistrationComplete = async (ownerData: any) => {
+    if (!tempUserData) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // First create the user account
+      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner');
+      
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setStep('complete');
+      toast({
+        title: "Registration Complete!",
+        description: "Your turf owner account has been created and your application submitted for review.",
+      });
+      
+      setTempUserData(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during registration",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (step === 'role') {
@@ -153,6 +188,7 @@ const Auth = () => {
           <OwnerRegistrationForm 
             onBack={() => setStep('auth')}
             onComplete={handleOwnerRegistrationComplete}
+            tempUserData={tempUserData}
           />
         </div>
       </div>
@@ -167,9 +203,9 @@ const Auth = () => {
             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">✓</span>
             </div>
-            <h3 className="text-xl font-semibold mb-4">Application Submitted!</h3>
+            <h3 className="text-xl font-semibold mb-4">Registration Complete!</h3>
             <p className="text-muted-foreground mb-6">
-              Thank you for registering as a turf owner. Our team will review your application within 24-48 hours and send you an email with the next steps.
+              Your turf owner account has been created successfully! Our team will review your business information within 24-48 hours and send you an email with the next steps.
             </p>
             <Button onClick={() => navigate('/')} className="w-full">
               Return to Home
@@ -290,7 +326,11 @@ const Auth = () => {
                 className="w-full cricket-gradient text-white hover:opacity-90" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
+                {isLoading ? 'Loading...' : (
+                  isSignUp 
+                    ? (selectedRole === 'turf_owner' ? 'Continue to Business Details' : 'Create Account')
+                    : 'Sign In'
+                )}
               </Button>
             </form>
             

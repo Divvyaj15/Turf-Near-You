@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,16 +11,17 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface OwnerRegistrationFormProps {
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (ownerData: any) => void;
+  tempUserData?: {email: string, password: string, fullName: string} | null;
 }
 
-const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, onComplete }) => {
+const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, onComplete, tempUserData }) => {
   const [formData, setFormData] = useState({
     businessName: '',
-    ownerName: '',
+    ownerName: tempUserData?.fullName || '',
     businessType: '',
     contactPhone: '',
-    contactEmail: '',
+    contactEmail: tempUserData?.email || '',
     address: '',
     yearsOfOperation: [1]
   });
@@ -37,6 +37,14 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
     setIsLoading(true);
 
     try {
+      // If we have tempUserData, this is part of the signup flow
+      if (tempUserData) {
+        // Just pass the form data back to the parent to handle user creation and owner data insertion
+        onComplete(formData);
+        return;
+      }
+
+      // Otherwise, this is updating an existing user (shouldn't happen in new flow, but keeping for safety)
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -63,7 +71,7 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
         description: "Your turf owner application has been submitted for review. You'll receive an email within 24-48 hours.",
       });
 
-      onComplete();
+      onComplete(formData);
     } catch (error: any) {
       console.error('Owner registration error:', error);
       toast({
@@ -82,9 +90,12 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
         <div className="w-12 h-12 mx-auto bg-green-500/10 rounded-full flex items-center justify-center mb-3">
           <Building2 className="w-6 h-6 text-green-600" />
         </div>
-        <CardTitle className="text-2xl">Business Information</CardTitle>
+        <CardTitle className="text-2xl">Complete Your Business Registration</CardTitle>
         <p className="text-muted-foreground">
-          Tell us about your turf business to get started
+          {tempUserData ? 
+            `Hi ${tempUserData.fullName}, tell us about your turf business to complete your registration` :
+            "Tell us about your turf business to get started"
+          }
         </p>
       </CardHeader>
       
@@ -154,12 +165,13 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Business Address</Label>
+            <Label htmlFor="address">Business Address *</Label>
             <Input
               id="address"
               placeholder="Complete address with area, Mumbai"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
+              required
             />
           </div>
 
@@ -175,13 +187,23 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
             />
           </div>
 
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-900 mb-2">What happens next?</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• Your account will be created immediately</li>
+              <li>• Our team will review your business information within 24-48 hours</li>
+              <li>• You'll receive an email confirmation once approved</li>
+              <li>• You can then start listing your turfs and managing bookings</li>
+            </ul>
+          </div>
+
           <div className="flex gap-4 pt-4">
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? 'Submitting...' : 'Submit Application'}
+              {isLoading ? 'Creating Account...' : 'Complete Registration'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
