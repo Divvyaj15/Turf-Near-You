@@ -29,6 +29,22 @@ export interface Booking {
   };
 }
 
+export interface CreateBookingData {
+  turf_id: string;
+  user_id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  total_hours: number;
+  base_price: number;
+  premium_charges: number;
+  total_amount: number;
+  player_name: string;
+  player_phone: string;
+  player_email?: string;
+  special_requests?: string;
+}
+
 export const useBookings = () => {
   const { user } = useAuth();
 
@@ -47,6 +63,7 @@ export const useBookings = () => {
             address
           )
         `)
+        .eq('user_id', user.id)
         .order('booking_date', { ascending: false });
 
       if (error) throw error;
@@ -88,7 +105,7 @@ export const useCreateBooking = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (bookingData: Partial<Booking>) => {
+    mutationFn: async (bookingData: CreateBookingData) => {
       const { data, error } = await supabase
         .from('bookings')
         .insert(bookingData)
@@ -109,7 +126,7 @@ export const useUpdateBooking = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Booking>) => {
+    mutationFn: async ({ id, ...updates }: { id: string; status?: Booking['status']; payment_status?: Booking['payment_status'] }) => {
       const { data, error } = await supabase
         .from('bookings')
         .update(updates)

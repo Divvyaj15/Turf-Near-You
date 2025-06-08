@@ -1,7 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface Review {
   id: string;
@@ -17,6 +16,14 @@ export interface Review {
   };
 }
 
+export interface CreateReviewData {
+  booking_id: string;
+  turf_id: string;
+  user_id: string;
+  rating: number;
+  comment?: string;
+}
+
 export const useTurfReviews = (turfId: string) => {
   return useQuery({
     queryKey: ['turf-reviews', turfId],
@@ -25,7 +32,7 @@ export const useTurfReviews = (turfId: string) => {
         .from('reviews')
         .select(`
           *,
-          profiles:user_id (
+          profiles!reviews_user_id_fkey (
             full_name
           )
         `)
@@ -43,7 +50,7 @@ export const useCreateReview = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (reviewData: Partial<Review>) => {
+    mutationFn: async (reviewData: CreateReviewData) => {
       const { data, error } = await supabase
         .from('reviews')
         .insert(reviewData)
