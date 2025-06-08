@@ -9,6 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          base_price: number
+          booking_date: string
+          created_at: string | null
+          end_time: string
+          id: string
+          payment_status: string | null
+          player_email: string | null
+          player_name: string
+          player_phone: string
+          premium_charges: number | null
+          special_requests: string | null
+          start_time: string
+          status: string | null
+          total_amount: number
+          total_hours: number
+          turf_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          base_price: number
+          booking_date: string
+          created_at?: string | null
+          end_time: string
+          id?: string
+          payment_status?: string | null
+          player_email?: string | null
+          player_name: string
+          player_phone: string
+          premium_charges?: number | null
+          special_requests?: string | null
+          start_time: string
+          status?: string | null
+          total_amount: number
+          total_hours: number
+          turf_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          base_price?: number
+          booking_date?: string
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          payment_status?: string | null
+          player_email?: string | null
+          player_name?: string
+          player_phone?: string
+          premium_charges?: number | null
+          special_requests?: string | null
+          start_time?: string
+          status?: string | null
+          total_amount?: number
+          total_hours?: number
+          turf_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_turf_id_fkey"
+            columns: ["turf_id"]
+            isOneToOne: false
+            referencedRelation: "turfs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -50,6 +121,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          turf_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          turf_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          turf_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_turf_id_fkey"
+            columns: ["turf_id"]
+            isOneToOne: false
+            referencedRelation: "turfs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       turf_owners: {
         Row: {
