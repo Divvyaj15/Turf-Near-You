@@ -213,7 +213,7 @@ const ReviewSystem = ({ turfId, bookingId, canReview = false }: ReviewSystemProp
                   </div>
                   <div>
                     <div className="font-medium">
-                      {review.profiles?.full_name || 'Anonymous User'}
+                      Anonymous User
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {format(new Date(review.created_at), 'PPP')}
