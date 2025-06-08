@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock, DollarSign, MapPin, Users } from 'lucide-react';
+import { CalendarIcon, Clock, DollarSign, MapPin, Users, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateBooking } from '@/hooks/useBookings';
@@ -18,6 +18,7 @@ interface BookingFormProps {
   turf: Turf;
   onSuccess?: () => void;
   onCancel?: () => void;
+  onBack?: () => void;
 }
 
 interface PricingResult {
@@ -27,7 +28,7 @@ interface PricingResult {
   totalAmount: number;
 }
 
-const BookingForm = ({ turf, onSuccess, onCancel }: BookingFormProps) => {
+const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const createBooking = useCreateBooking();
@@ -325,9 +326,13 @@ const BookingForm = ({ turf, onSuccess, onCancel }: BookingFormProps) => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4">
-                  {onCancel && (
-                    <Button type="button" variant="outline" onClick={onCancel}>
-                      Cancel
+                  {(onCancel || onBack) && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={onCancel || onBack}
+                    >
+                      {onBack ? 'Back' : 'Cancel'}
                     </Button>
                   )}
                   <Button 

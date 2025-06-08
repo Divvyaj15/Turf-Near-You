@@ -11,9 +11,6 @@ export interface Review {
   comment?: string;
   created_at: string;
   updated_at: string;
-  profiles?: {
-    full_name: string;
-  };
 }
 
 export interface CreateReviewData {
@@ -30,12 +27,7 @@ export const useTurfReviews = (turfId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          profiles!reviews_user_id_fkey (
-            full_name
-          )
-        `)
+        .select('*')
         .eq('turf_id', turfId)
         .order('created_at', { ascending: false });
 
