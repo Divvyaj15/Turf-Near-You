@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield, LogOut, Building2 } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Star, Clock, Wifi, Car, Shield, LogOut, Building2, CheckCircle, TrendingUp, DollarSign } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -141,6 +141,119 @@ const Index = () => {
         <div className="absolute bottom-20 left-1/4 animate-bounce-sports delay-500">
           <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
             <span className="text-xl">🏓</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Turf Owner Registration Section */}
+      <section className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Own a Sports Turf?</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Join Mumbai's leading sports platform and grow your turf business with TurfConnect
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Benefits */}
+              <div className="space-y-6">
+                <h3 className="text-2xl font-semibold mb-6">Why Choose TurfConnect?</h3>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Increase Bookings</h4>
+                    <p className="text-muted-foreground">Reach thousands of active players looking for quality turfs in Mumbai</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <DollarSign className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Maximize Revenue</h4>
+                    <p className="text-muted-foreground">Smart pricing tools and peak hour management to optimize your earnings</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Secure Payments</h4>
+                    <p className="text-muted-foreground">Guaranteed payments with our secure payment processing system</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Easy Management</h4>
+                    <p className="text-muted-foreground">Intuitive dashboard to manage bookings, pricing, and customer reviews</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Registration CTA */}
+              <div>
+                <Card className="shadow-xl border-2 border-green-200">
+                  <CardHeader className="text-center bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-t-lg">
+                    <CardTitle className="text-2xl">Register Your Turf</CardTitle>
+                    <p className="text-green-50">Start growing your business today</p>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-green-600 mb-2">Free to Join</div>
+                        <p className="text-muted-foreground">No setup fees, only pay when you earn</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <span>Quick 5-minute registration</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <span>24-48 hour approval process</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <span>Dedicated support team</span>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => navigate('/auth')} 
+                        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-lg py-3"
+                        size="lg"
+                      >
+                        <Building2 className="w-5 h-5 mr-2" />
+                        Register Your Turf Now
+                      </Button>
+
+                      <p className="text-xs text-muted-foreground text-center">
+                        Already have an account? 
+                        <Button variant="link" className="p-0 ml-1 h-auto" onClick={() => navigate('/auth')}>
+                          Sign in here
+                        </Button>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </section>
