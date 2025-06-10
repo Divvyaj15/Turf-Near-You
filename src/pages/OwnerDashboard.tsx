@@ -1,15 +1,16 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus, MapPin, Users } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus, MapPin, Users, BarChart2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AddTurfForm from '@/components/AddTurfForm';
 import BookingManagement from '@/components/BookingManagement';
+import TurfManagement from '@/components/TurfManagement';
 import { useOwnerTurfs } from '@/hooks/useTurfs';
 import { useOwnerBookings } from '@/hooks/useBookings';
 
@@ -31,7 +32,7 @@ const OwnerDashboard = () => {
   const { toast } = useToast();
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'addturf' | 'bookings'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'addturf' | 'bookings' | 'turfs'>('dashboard');
   
   const { data: turfs = [], refetch: refetchTurfs } = useOwnerTurfs();
   const { data: bookings = [] } = useOwnerBookings();
@@ -50,6 +51,9 @@ const OwnerDashboard = () => {
              b.status === 'completed';
     })
     .reduce((sum, b) => sum + b.total_amount, 0);
+
+  const totalTurfs = turfs.length;
+  const activeTurfs = turfs.filter(t => t.status === 'active').length;
 
   useEffect(() => {
     if (!user) {
@@ -179,6 +183,13 @@ const OwnerDashboard = () => {
                 Dashboard
               </Button>
               <Button
+                variant={currentView === 'turfs' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentView('turfs')}
+              >
+                My Turfs
+              </Button>
+              <Button
                 variant={currentView === 'bookings' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setCurrentView('bookings')}
@@ -208,6 +219,14 @@ const OwnerDashboard = () => {
             className="flex-1"
           >
             Dashboard
+          </Button>
+          <Button
+            variant={currentView === 'turfs' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCurrentView('turfs')}
+            className="flex-1"
+          >
+            My Turfs
           </Button>
           <Button
             variant={currentView === 'bookings' ? 'default' : 'ghost'}
@@ -263,181 +282,90 @@ const OwnerDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Active Turfs</p>
-                      <p className="text-2xl font-bold">{turfs.length}</p>
+                      <p className="text-2xl font-bold">{activeTurfs}/{totalTurfs}</p>
                     </div>
                     <Building2 className="w-8 h-8 text-purple-500" />
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Bookings</p>
-                      <p className="text-2xl font-bold">{bookings.length}</p>
-                    </div>
-                    <Star className="w-8 h-8 text-yellow-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* My Turfs Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold">My Turfs</h3>
-                <Button onClick={() => setCurrentView('addturf')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Turf
-                </Button>
-              </div>
-
-              {turfs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {turfs.map((turf) => (
-                    <Card key={turf.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        {turf.cover_image_url && (
-                          <img
-                            src={turf.cover_image_url}
-                            alt={turf.name}
-                            className="w-full h-32 object-cover rounded-lg mb-3"
-                          />
-                        )}
-                        <h4 className="font-semibold text-lg mb-2">{turf.name}</h4>
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            {turf.area}
-                          </div>
-                          <div className="flex items-center">
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            ₹{turf.base_price_per_hour}/hour
-                          </div>
-                          {turf.capacity && (
-                            <div className="flex items-center">
-                              <Users className="w-4 h-4 mr-2" />
-                              Up to {turf.capacity} players
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex gap-2 mt-3">
-                          <Badge variant="outline" className="text-xs">
-                            {turf.status === 'active' ? 'Active' : 'Inactive'}
-                          </Badge>
-                          {turf.supported_sports.length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {turf.supported_sports[0]}
-                              {turf.supported_sports.length > 1 && ` +${turf.supported_sports.length - 1}`}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card className="text-center py-12">
-                  <CardContent>
-                    <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold mb-2">No Turfs Added Yet</h4>
-                    <p className="text-muted-foreground mb-4">
-                      Start by adding your first turf to begin accepting bookings
-                    </p>
-                    <Button onClick={() => setCurrentView('addturf')}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Turf
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setCurrentView('addturf')}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Plus className="w-5 h-5 mr-2 text-primary" />
-                    Add New Turf
-                  </CardTitle>
+                  <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Register a new turf to start accepting bookings
-                  </p>
-                  <Button className="w-full">Get Started</Button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      className="h-auto py-4"
+                      onClick={() => setCurrentView('addturf')}
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Add New Turf
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-auto py-4"
+                      onClick={() => setCurrentView('bookings')}
+                    >
+                      <Calendar className="w-5 h-5 mr-2" />
+                      View Bookings
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-auto py-4"
+                      onClick={() => setCurrentView('turfs')}
+                    >
+                      <Building2 className="w-5 h-5 mr-2" />
+                      Manage Turfs
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-auto py-4"
+                    >
+                      <BarChart2 className="w-5 h-5 mr-2" />
+                      View Analytics
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setCurrentView('bookings')}>
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                    Manage Bookings
-                  </CardTitle>
+                  <CardTitle>Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    View and manage your turf bookings
-                  </p>
-                  <Button variant="outline" className="w-full">View Bookings</Button>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-green-500" />
-                    Financial Reports
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Track your earnings and financial performance
-                  </p>
-                  <Button variant="outline" className="w-full">View Reports</Button>
+                  <div className="space-y-4">
+                    {bookings.slice(0, 3).map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{booking.player_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(booking.booking_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant={booking.status === 'completed' ? 'default' : 'secondary'}>
+                          {booking.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Business Information */}
-            <Card className="mt-8">
-              <CardHeader>
-                <CardTitle>Business Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Business Type</p>
-                    <p className="font-medium capitalize">{ownerData.business_type}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Contact Phone</p>
-                    <p className="font-medium">{ownerData.contact_phone}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Contact Email</p>
-                    <p className="font-medium">{ownerData.contact_email}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Years of Operation</p>
-                    <p className="font-medium">{ownerData.years_of_operation} years</p>
-                  </div>
-                  {ownerData.address && (
-                    <div className="md:col-span-2">
-                      <p className="text-muted-foreground">Address</p>
-                      <p className="font-medium">{ownerData.address}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
           </>
         )}
 
-        {currentView === 'bookings' && <BookingManagement />}
+        {currentView === 'turfs' && (
+          <TurfManagement turfs={turfs} onTurfUpdate={refetchTurfs} />
+        )}
+
+        {currentView === 'bookings' && (
+          <BookingManagement />
+        )}
       </main>
     </div>
   );

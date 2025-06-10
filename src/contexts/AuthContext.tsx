@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,11 +84,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    return { error };
+    console.log('Attempting sign in...');
+    let timeout: NodeJS.Timeout;
+    try {
+      const signInPromise = supabase.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise((_, reject) =>
+        timeout = setTimeout(() => reject(new Error('Request timed out')), 10000)
+      );
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+      console.log('Sign in result:', error);
+      return { error };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { error };
+    } finally {
+      clearTimeout(timeout);
+    }
   };
 
   const signOut = async () => {
