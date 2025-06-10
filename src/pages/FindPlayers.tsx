@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Users, MapPin, Filter, Plus } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Filter, Plus, Search, Trophy, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PlayerSearch from '@/components/PlayerSearch';
 import PlayerList from '@/components/PlayerList';
@@ -49,6 +49,33 @@ const FindPlayers = () => {
     });
     console.log('Inviting player:', playerId);
   };
+
+  const sports = [
+    { 
+      id: 'cricket', 
+      name: 'Cricket', 
+      icon: '🏏',
+      color: 'bg-green-500',
+      players: '2,341',
+      games: '156'
+    },
+    { 
+      id: 'football', 
+      name: 'Football', 
+      icon: '⚽',
+      color: 'bg-blue-500',
+      players: '1,892',
+      games: '89'
+    },
+    { 
+      id: 'pickleball', 
+      name: 'Pickleball', 
+      icon: '🏓',
+      color: 'bg-purple-500',
+      players: '743',
+      games: '45'
+    }
+  ];
 
   if (!user) {
     return (
@@ -96,28 +123,72 @@ const FindPlayers = () => {
           </Button>
         </div>
 
+        {/* Live Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">5,000+</div>
+              <div className="text-sm text-gray-600">Active Players</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">290+</div>
+              <div className="text-sm text-gray-600">Games Today</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">50+</div>
+              <div className="text-sm text-gray-600">Premium Turfs</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">4.8★</div>
+              <div className="text-sm text-gray-600">Avg Rating</div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Sport Selection */}
         <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-primary" />
-              <span>Select Sport</span>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl mb-2 flex items-center justify-center space-x-2">
+              <Trophy className="w-6 h-6 text-primary" />
+              <span>Choose Your Sport</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedSport} onValueChange={(value) => setSelectedSport(value as any)}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="cricket" className="flex items-center space-x-2">
-                  🏏 Cricket
-                </TabsTrigger>
-                <TabsTrigger value="football" className="flex items-center space-x-2">
-                  ⚽ Football
-                </TabsTrigger>
-                <TabsTrigger value="pickleball" className="flex items-center space-x-2">
-                  🏓 Pickleball
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {sports.map((sport) => (
+                <Card 
+                  key={sport.id}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
+                    selectedSport === sport.id ? 'ring-2 ring-primary shadow-lg' : ''
+                  }`}
+                  onClick={() => setSelectedSport(sport.id as any)}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className="text-4xl mb-3">{sport.icon}</div>
+                    <h3 className="text-xl font-semibold mb-2">{sport.name}</h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Players:</span>
+                        <span className="font-medium text-primary">{sport.players}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Games Today:</span>
+                        <span className="font-medium text-primary">{sport.games}</span>
+                      </div>
+                    </div>
+                    {selectedSport === sport.id && (
+                      <div className="w-full h-1 bg-primary rounded-full"></div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -129,7 +200,7 @@ const FindPlayers = () => {
         />
 
         {/* View Toggle and Stats */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div className="flex items-center space-x-2">
             <Button
               variant={viewMode === 'list' ? 'default' : 'outline'}
@@ -149,7 +220,7 @@ const FindPlayers = () => {
             </Button>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <div className="text-sm text-gray-600 flex items-center">
               <Filter className="w-4 h-4 mr-1" />
               Active filters: {Object.values(searchFilters).filter(v => 
@@ -159,7 +230,8 @@ const FindPlayers = () => {
               ).length}
             </div>
             
-            <div className="text-sm font-medium text-primary">
+            <div className="text-sm font-medium text-primary flex items-center">
+              <Search className="w-4 h-4 mr-1" />
               Searching for {selectedSport} players
             </div>
           </div>
@@ -183,19 +255,30 @@ const FindPlayers = () => {
         </div>
 
         {/* Quick Actions Footer */}
-        <Card className="mt-8">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-600">
-                  <strong>Need more players?</strong> Create a game and invite players automatically
-                </div>
+        <Card className="bg-gradient-to-r from-green-500 to-blue-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-bold mb-2">Ready to Play?</h3>
+                <p className="text-white/90">
+                  Create a game and invite players automatically, or browse more games
+                </p>
               </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" onClick={() => navigate('/customer-dashboard')}>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <Button 
+                  variant="secondary"
+                  onClick={() => navigate('/customer-dashboard')}
+                  className="bg-white text-gray-900 hover:bg-gray-100"
+                >
+                  <Star className="w-4 h-4 mr-2" />
                   View My Games
                 </Button>
-                <Button onClick={() => setShowCreateGame(true)} className="cricket-gradient text-white">
+                <Button 
+                  onClick={() => setShowCreateGame(true)} 
+                  variant="outline"
+                  className="border-white text-white hover:bg-white hover:text-gray-900"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
                   Create New Game
                 </Button>
               </div>

@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Clock, MapPin, Users, IndianRupee, X, Plus } from 'lucide-react';
+import { CalendarIcon, MapPin, Users, Clock, Trophy, DollarSign } from 'lucide-react';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateGameModalProps {
@@ -20,38 +21,25 @@ interface CreateGameModalProps {
 
 const CreateGameModal: React.FC<CreateGameModalProps> = ({ isOpen, onClose, sport }) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const [gameData, setGameData] = useState({
     title: '',
     description: '',
-    gameDate: '',
+    date: undefined as Date | undefined,
     startTime: '',
-    duration: '2',
+    duration: 2,
     location: '',
-    turfId: '',
-    playersNeeded: sport === 'cricket' ? '11' : sport === 'football' ? '11' : '4',
-    skillLevelMin: '1',
-    skillLevelMax: '10',
-    costPerPlayer: '',
+    playersNeeded: sport === 'cricket' ? 22 : sport === 'football' ? 22 : 4,
+    skillLevelMin: 1,
+    skillLevelMax: 10,
+    costPerPlayer: 0,
     equipmentAvailable: false,
-    autoAcceptInvites: false
+    autoAcceptRequests: false
   });
-
-  const mumbaiLocations = [
-    'Bandra West', 'Andheri East', 'Powai', 'Malad West', 'Worli', 
-    'Juhu', 'Goregaon', 'Borivali', 'Santacruz', 'Vile Parle'
-  ];
-
-  const timeSlots = [
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00'
-  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.title || !formData.gameDate || !formData.startTime || !formData.location) {
+    if (!gameData.title || !gameData.date || !gameData.startTime || !gameData.location) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -60,35 +48,34 @@ const CreateGameModal: React.FC<CreateGameModalProps> = ({ isOpen, onClose, spor
       return;
     }
 
-    // Create game logic would go here
-    console.log('Creating game:', formData);
+    // Here you would typically save to your backend
+    console.log('Creating game:', { ...gameData, sport });
     
     toast({
       title: "Game Created Successfully!",
-      description: `Your ${sport} game "${formData.title}" has been created and players will be notified.`,
+      description: "Your game has been created and players will be notified.",
     });
     
     onClose();
     
     // Reset form
-    setFormData({
+    setGameData({
       title: '',
       description: '',
-      gameDate: '',
+      date: undefined,
       startTime: '',
-      duration: '2',
+      duration: 2,
       location: '',
-      turfId: '',
-      playersNeeded: sport === 'cricket' ? '11' : sport === 'football' ? '11' : '4',
-      skillLevelMin: '1',
-      skillLevelMax: '10',
-      costPerPlayer: '',
+      playersNeeded: sport === 'cricket' ? 22 : sport === 'football' ? 22 : 4,
+      skillLevelMin: 1,
+      skillLevelMax: 10,
+      costPerPlayer: 0,
       equipmentAvailable: false,
-      autoAcceptInvites: false
+      autoAcceptRequests: false
     });
   };
 
-  const getSportIcon = (sport: string) => {
+  const getSportEmoji = (sport: string) => {
     switch (sport) {
       case 'cricket': return '🏏';
       case 'football': return '⚽';
@@ -102,284 +89,226 @@ const CreateGameModal: React.FC<CreateGameModalProps> = ({ isOpen, onClose, spor
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-xl">
-            <span className="text-2xl">{getSportIcon(sport)}</span>
-            <span>Create {sport.charAt(0).toUpperCase() + sport.slice(1)} Game</span>
+            <span className="text-2xl">{getSportEmoji(sport)}</span>
+            <span>Create New {sport.charAt(0).toUpperCase() + sport.slice(1)} Game</span>
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Game Basic Info */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold flex items-center space-x-2">
-                <Plus className="w-4 h-4" />
-                <span>Game Details</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <Label htmlFor="title">Game Title *</Label>
-                  <Input
-                    id="title"
-                    placeholder={`e.g., Evening ${sport} match at Bandra`}
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div className="md:col-span-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Any special instructions, rules, or information about the game..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Basic Game Info */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Game Title *</Label>
+              <Input
+                id="title"
+                value={gameData.title}
+                onChange={(e) => setGameData({ ...gameData, title: e.target.value })}
+                placeholder={`Sunday ${sport} match`}
+                className="mt-1"
+              />
+            </div>
 
-          {/* Date & Time */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold flex items-center space-x-2">
-                <Calendar className="w-4 h-4" />
-                <span>Schedule</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="gameDate">Date *</Label>
-                  <Input
-                    id="gameDate"
-                    type="date"
-                    value={formData.gameDate}
-                    onChange={(e) => setFormData({ ...formData, gameDate: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="startTime">Start Time *</Label>
-                  <Select
-                    value={formData.startTime}
-                    onValueChange={(value) => setFormData({ ...formData, startTime: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timeSlots.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="duration">Duration (hours)</Label>
-                  <Select
-                    value={formData.duration}
-                    onValueChange={(value) => setFormData({ ...formData, duration: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 hour</SelectItem>
-                      <SelectItem value="1.5">1.5 hours</SelectItem>
-                      <SelectItem value="2">2 hours</SelectItem>
-                      <SelectItem value="2.5">2.5 hours</SelectItem>
-                      <SelectItem value="3">3 hours</SelectItem>
-                      <SelectItem value="4">4 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={gameData.description}
+                onChange={(e) => setGameData({ ...gameData, description: e.target.value })}
+                placeholder="Tell players more about your game..."
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
 
-          {/* Location */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold flex items-center space-x-2">
+          {/* Date and Time */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal mt-1"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {gameData.date ? format(gameData.date, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={gameData.date}
+                    onSelect={(date) => setGameData({ ...gameData, date })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div>
+              <Label htmlFor="startTime">Start Time *</Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={gameData.startTime}
+                onChange={(e) => setGameData({ ...gameData, startTime: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* Location and Duration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="location" className="flex items-center space-x-1">
                 <MapPin className="w-4 h-4" />
-                <span>Location</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="location">Area/Location *</Label>
-                  <Select
-                    value={formData.location}
-                    onValueChange={(value) => setFormData({ ...formData, location: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mumbaiLocations.map((location) => (
-                        <SelectItem key={location} value={location}>
-                          {location}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="turfId">Specific Turf (Optional)</Label>
-                  <Select
-                    value={formData.turfId}
-                    onValueChange={(value) => setFormData({ ...formData, turfId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select turf or TBD" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">To Be Decided</SelectItem>
-                      <SelectItem value="turf1">Sports Club Bandra</SelectItem>
-                      <SelectItem value="turf2">Andheri Sports Complex</SelectItem>
-                      <SelectItem value="turf3">Powai Ground</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                <span>Location *</span>
+              </Label>
+              <Input
+                id="location"
+                value={gameData.location}
+                onChange={(e) => setGameData({ ...gameData, location: e.target.value })}
+                placeholder="Turf name or address"
+                className="mt-1"
+              />
+            </div>
 
-          {/* Players & Skill */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold flex items-center space-x-2">
+            <div>
+              <Label htmlFor="duration" className="flex items-center space-x-1">
+                <Clock className="w-4 h-4" />
+                <span>Duration (hours)</span>
+              </Label>
+              <Select
+                value={gameData.duration.toString()}
+                onValueChange={(value) => setGameData({ ...gameData, duration: parseInt(value) })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 hour</SelectItem>
+                  <SelectItem value="2">2 hours</SelectItem>
+                  <SelectItem value="3">3 hours</SelectItem>
+                  <SelectItem value="4">4 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Players and Skill Level */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="playersNeeded" className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
-                <span>Players & Requirements</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="playersNeeded">Players Needed</Label>
-                  <Select
-                    value={formData.playersNeeded}
-                    onValueChange={(value) => setFormData({ ...formData, playersNeeded: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 20 }, (_, i) => i + 2).map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num} players
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="skillLevelMin">Min Skill Level</Label>
-                  <Select
-                    value={formData.skillLevelMin}
-                    onValueChange={(value) => setFormData({ ...formData, skillLevelMin: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((level) => (
-                        <SelectItem key={level} value={level.toString()}>
-                          Level {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="skillLevelMax">Max Skill Level</Label>
-                  <Select
-                    value={formData.skillLevelMax}
-                    onValueChange={(value) => setFormData({ ...formData, skillLevelMax: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((level) => (
-                        <SelectItem key={level} value={level.toString()}>
-                          Level {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                <span>Players Needed</span>
+              </Label>
+              <Input
+                id="playersNeeded"
+                type="number"
+                min="2"
+                max="50"
+                value={gameData.playersNeeded}
+                onChange={(e) => setGameData({ ...gameData, playersNeeded: parseInt(e.target.value) })}
+                className="mt-1"
+              />
+            </div>
 
-          {/* Cost & Equipment */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold flex items-center space-x-2">
-                <IndianRupee className="w-4 h-4" />
-                <span>Cost & Equipment</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="costPerPlayer">Cost per Player (₹)</Label>
-                  <Input
-                    id="costPerPlayer"
-                    type="number"
-                    placeholder="e.g., 200"
-                    value={formData.costPerPlayer}
-                    onChange={(e) => setFormData({ ...formData, costPerPlayer: e.target.value })}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.equipmentAvailable}
-                    onCheckedChange={(checked) => 
-                      setFormData({ ...formData, equipmentAvailable: checked })
-                    }
-                  />
-                  <Label>Equipment will be provided</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <div>
+              <Label htmlFor="costPerPlayer" className="flex items-center space-x-1">
+                <DollarSign className="w-4 h-4" />
+                <span>Cost per Player (₹)</span>
+              </Label>
+              <Input
+                id="costPerPlayer"
+                type="number"
+                min="0"
+                value={gameData.costPerPlayer}
+                onChange={(e) => setGameData({ ...gameData, costPerPlayer: parseInt(e.target.value) })}
+                className="mt-1"
+                placeholder="0 for free"
+              />
+            </div>
+          </div>
 
-          {/* Game Settings */}
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <h3 className="font-semibold">Game Settings</h3>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.autoAcceptInvites}
-                  onCheckedChange={(checked) => 
-                    setFormData({ ...formData, autoAcceptInvites: checked })
-                  }
-                />
-                <Label>Auto-accept players who meet criteria</Label>
+          {/* Skill Level Range */}
+          <div>
+            <Label className="flex items-center space-x-1">
+              <Trophy className="w-4 h-4" />
+              <span>Skill Level Range</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <Label htmlFor="skillMin" className="text-sm text-gray-600">Minimum</Label>
+                <Select
+                  value={gameData.skillLevelMin.toString()}
+                  onValueChange={(value) => setGameData({ ...gameData, skillLevelMin: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5,6,7,8,9,10].map(level => (
+                      <SelectItem key={level} value={level.toString()}>
+                        Level {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="skillMax" className="text-sm text-gray-600">Maximum</Label>
+                <Select
+                  value={gameData.skillLevelMax.toString()}
+                  onValueChange={(value) => setGameData({ ...gameData, skillLevelMax: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5,6,7,8,9,10].map(level => (
+                      <SelectItem key={level} value={level.toString()}>
+                        Level {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
 
-          {/* Form Actions */}
+          {/* Additional Options */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">Equipment Available</Label>
+                <p className="text-xs text-gray-600">We'll provide equipment for players</p>
+              </div>
+              <Switch
+                checked={gameData.equipmentAvailable}
+                onCheckedChange={(checked) => setGameData({ ...gameData, equipmentAvailable: checked })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">Auto-accept Join Requests</Label>
+                <p className="text-xs text-gray-600">Players can join without your approval</p>
+              </div>
+              <Switch
+                checked={gameData.autoAcceptRequests}
+                onCheckedChange={(checked) => setGameData({ ...gameData, autoAcceptRequests: checked })}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
           <div className="flex space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
             <Button type="submit" className="flex-1 cricket-gradient text-white">
-              Create Game & Invite Players
+              Create Game
             </Button>
           </div>
         </form>
