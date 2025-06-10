@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, MapPin, Clock, Star } from 'lucide-react';
 
 interface PlayerSearchProps {
   sport: 'cricket' | 'football' | 'pickleball';
@@ -70,104 +70,151 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
     setSearchQuery('');
   };
 
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.availableNow) count++;
+    if (filters.availableToday) count++;
+    if (filters.availableWeekend) count++;
+    if (filters.maxDistance !== 25) count++;
+    if (filters.skillLevelMin !== 1 || filters.skillLevelMax !== 10) count++;
+    if (filters.ageMin !== 16 || filters.ageMax !== 60) count++;
+    if (filters.gender !== 'any') count++;
+    if (filters.positions.length > 0) count++;
+    if (filters.minRating > 0) count++;
+    return count;
+  };
+
   return (
     <div className="space-y-4 mb-6">
-      {/* Quick Search */}
+      {/* Quick Search Bar */}
       <Card>
         <CardContent className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search players by name or location..."
+              placeholder={`Search ${sport} players by name, location, or skill...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 pr-4"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Quick Filters */}
+      {/* Quick Filters Row */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Quick Filters</CardTitle>
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-primary" />
+              <span>Quick Filters</span>
+              {getActiveFiltersCount() > 0 && (
+                <Badge variant="default" className="ml-2">
+                  {getActiveFiltersCount()} active
+                </Badge>
+              )}
+            </CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="flex items-center space-x-1"
             >
-              <Filter className="w-4 h-4 mr-2" />
-              Advanced
+              <Filter className="w-4 h-4" />
+              <span>Advanced</span>
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Availability Toggles */}
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
+          {/* Availability Quick Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <Label className="text-sm font-medium">Available Now</Label>
+              </div>
               <Switch
                 checked={filters.availableNow}
                 onCheckedChange={(checked) => 
                   onFiltersChange({ ...filters, availableNow: checked })
                 }
               />
-              <Label>Available Now</Label>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <Label className="text-sm font-medium">Available Today</Label>
+              </div>
               <Switch
                 checked={filters.availableToday}
                 onCheckedChange={(checked) => 
                   onFiltersChange({ ...filters, availableToday: checked })
                 }
               />
-              <Label>Available Today</Label>
             </div>
-            <div className="flex items-center space-x-2">
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <Label className="text-sm font-medium">Available Weekend</Label>
+              </div>
               <Switch
                 checked={filters.availableWeekend}
                 onCheckedChange={(checked) => 
                   onFiltersChange({ ...filters, availableWeekend: checked })
                 }
               />
-              <Label>Available Weekend</Label>
             </div>
           </div>
 
-          {/* Distance Slider */}
-          <div className="space-y-2">
-            <Label>Max Distance: {filters.maxDistance}km</Label>
-            <Slider
-              value={[filters.maxDistance]}
-              onValueChange={(value) => 
-                onFiltersChange({ ...filters, maxDistance: value[0] })
-              }
-              max={50}
-              min={1}
-              step={1}
-              className="w-full"
-            />
-          </div>
+          {/* Distance and Skill Level */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center space-x-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>Max Distance</span>
+                </Label>
+                <span className="text-sm font-medium text-primary">{filters.maxDistance}km</span>
+              </div>
+              <Slider
+                value={[filters.maxDistance]}
+                onValueChange={(value) => 
+                  onFiltersChange({ ...filters, maxDistance: value[0] })
+                }
+                max={50}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
 
-          {/* Skill Level Range */}
-          <div className="space-y-2">
-            <Label>
-              Skill Level: {filters.skillLevelMin} - {filters.skillLevelMax}
-            </Label>
-            <Slider
-              value={[filters.skillLevelMin, filters.skillLevelMax]}
-              onValueChange={(value) => 
-                onFiltersChange({ 
-                  ...filters, 
-                  skillLevelMin: value[0], 
-                  skillLevelMax: value[1] 
-                })
-              }
-              max={10}
-              min={1}
-              step={1}
-              className="w-full"
-            />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center space-x-1">
+                  <Star className="w-4 h-4" />
+                  <span>Skill Level</span>
+                </Label>
+                <span className="text-sm font-medium text-primary">
+                  {filters.skillLevelMin} - {filters.skillLevelMax}
+                </span>
+              </div>
+              <Slider
+                value={[filters.skillLevelMin, filters.skillLevelMax]}
+                onValueChange={(value) => 
+                  onFiltersChange({ 
+                    ...filters, 
+                    skillLevelMin: value[0], 
+                    skillLevelMax: value[1] 
+                  })
+                }
+                max={10}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -182,8 +229,9 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
+                className="text-red-600 hover:text-red-700"
               >
-                <X className="w-4 h-4 mr-2" />
+                <X className="w-4 h-4 mr-1" />
                 Clear All
               </Button>
             </div>
@@ -191,7 +239,12 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
           <CardContent className="space-y-6">
             {/* Age Range */}
             <div className="space-y-2">
-              <Label>Age Range: {filters.ageMin} - {filters.ageMax}</Label>
+              <div className="flex items-center justify-between">
+                <Label>Age Range</Label>
+                <span className="text-sm font-medium text-primary">
+                  {filters.ageMin} - {filters.ageMax} years
+                </span>
+              </div>
               <Slider
                 value={[filters.ageMin, filters.ageMax]}
                 onValueChange={(value) => 
@@ -210,7 +263,7 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
 
             {/* Gender Filter */}
             <div className="space-y-2">
-              <Label>Gender</Label>
+              <Label>Gender Preference</Label>
               <Select
                 value={filters.gender}
                 onValueChange={(value) => 
@@ -221,25 +274,29 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
                   <SelectValue placeholder="Select gender preference" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="any">Any Gender</SelectItem>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Positions/Roles */}
             <div className="space-y-2">
-              <Label>Preferred Positions</Label>
+              <Label>Preferred Positions ({sport})</Label>
               <div className="flex flex-wrap gap-2">
                 {getSportPositions(sport).map((position) => (
                   <Badge
                     key={position}
                     variant={filters.positions.includes(position) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-primary hover:text-white transition-colors"
                     onClick={() => togglePosition(position)}
                   >
                     {position}
+                    {filters.positions.includes(position) && (
+                      <X className="w-3 h-3 ml-1" />
+                    )}
                   </Badge>
                 ))}
               </div>
@@ -247,7 +304,12 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
 
             {/* Minimum Rating */}
             <div className="space-y-2">
-              <Label>Minimum Rating: {filters.minRating}/5</Label>
+              <div className="flex items-center justify-between">
+                <Label>Minimum Rating</Label>
+                <span className="text-sm font-medium text-primary">
+                  {filters.minRating > 0 ? `${filters.minRating}/5 ⭐` : 'Any rating'}
+                </span>
+              </div>
               <Slider
                 value={[filters.minRating]}
                 onValueChange={(value) => 
@@ -258,6 +320,30 @@ const PlayerSearch: React.FC<PlayerSearchProps> = ({ sport, filters, onFiltersCh
                 step={0.5}
                 className="w-full"
               />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Active Filters Summary */}
+      {getActiveFiltersCount() > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Filter className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">
+                  {getActiveFiltersCount()} filter{getActiveFiltersCount() > 1 ? 's' : ''} active
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                Clear all filters
+              </Button>
             </div>
           </CardContent>
         </Card>
