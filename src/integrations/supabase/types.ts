@@ -80,6 +80,165 @@ export type Database = {
           },
         ]
       }
+      game_invitations: {
+        Row: {
+          created_at: string | null
+          game_id: string
+          id: string
+          invited_by: string
+          invited_user_id: string
+          message: string | null
+          responded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_id: string
+          id?: string
+          invited_by: string
+          invited_user_id: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          invited_by?: string
+          invited_user_id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_invitations_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          cost_per_player: number | null
+          created_at: string | null
+          created_by: string
+          current_players: number | null
+          description: string | null
+          duration_hours: number | null
+          equipment_available: boolean | null
+          game_date: string
+          id: string
+          location: string | null
+          players_needed: number | null
+          rsvp_deadline: string | null
+          skill_level_max: number | null
+          skill_level_min: number | null
+          sport: string
+          start_time: string
+          status: string | null
+          title: string
+          turf_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cost_per_player?: number | null
+          created_at?: string | null
+          created_by: string
+          current_players?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          equipment_available?: boolean | null
+          game_date: string
+          id?: string
+          location?: string | null
+          players_needed?: number | null
+          rsvp_deadline?: string | null
+          skill_level_max?: number | null
+          skill_level_min?: number | null
+          sport: string
+          start_time: string
+          status?: string | null
+          title: string
+          turf_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cost_per_player?: number | null
+          created_at?: string | null
+          created_by?: string
+          current_players?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          equipment_available?: boolean | null
+          game_date?: string
+          id?: string
+          location?: string | null
+          players_needed?: number | null
+          rsvp_deadline?: string | null
+          skill_level_max?: number | null
+          skill_level_min?: number | null
+          sport?: string
+          start_time?: string
+          status?: string | null
+          title?: string
+          turf_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_turf_id_fkey"
+            columns: ["turf_id"]
+            isOneToOne: false
+            referencedRelation: "turfs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_reviews: {
+        Row: {
+          categories: Json | null
+          comment: string | null
+          created_at: string | null
+          game_id: string
+          id: string
+          rating: number | null
+          reviewed_user_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          categories?: Json | null
+          comment?: string | null
+          created_at?: string | null
+          game_id: string
+          id?: string
+          rating?: number | null
+          reviewed_user_id: string
+          reviewer_id: string
+        }
+        Update: {
+          categories?: Json | null
+          comment?: string | null
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          rating?: number | null
+          reviewed_user_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_reviews_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -297,6 +456,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_availability: {
+        Row: {
+          created_at: string | null
+          day_of_week: number | null
+          id: string
+          is_available: boolean | null
+          time_slot: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          is_available?: boolean | null
+          time_slot: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: string
+          is_available?: boolean | null
+          time_slot?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          age: number | null
+          auto_accept_invites: boolean | null
+          created_at: string | null
+          cricheroes_username: string | null
+          cricheroes_verified: boolean | null
+          full_name: string
+          gender: string | null
+          id: string
+          is_available: boolean | null
+          last_seen: string | null
+          location: string | null
+          max_travel_distance: number | null
+          overall_rating: number | null
+          phone_number: string
+          preferred_contact: string | null
+          profile_image_url: string | null
+          total_games_played: number | null
+          updated_at: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          age?: number | null
+          auto_accept_invites?: boolean | null
+          created_at?: string | null
+          cricheroes_username?: string | null
+          cricheroes_verified?: boolean | null
+          full_name: string
+          gender?: string | null
+          id: string
+          is_available?: boolean | null
+          last_seen?: string | null
+          location?: string | null
+          max_travel_distance?: number | null
+          overall_rating?: number | null
+          phone_number: string
+          preferred_contact?: string | null
+          profile_image_url?: string | null
+          total_games_played?: number | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          age?: number | null
+          auto_accept_invites?: boolean | null
+          created_at?: string | null
+          cricheroes_username?: string | null
+          cricheroes_verified?: boolean | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          is_available?: boolean | null
+          last_seen?: string | null
+          location?: string | null
+          max_travel_distance?: number | null
+          overall_rating?: number | null
+          phone_number?: string
+          preferred_contact?: string | null
+          profile_image_url?: string | null
+          total_games_played?: number | null
+          updated_at?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      user_sports_profiles: {
+        Row: {
+          batting_style: string | null
+          bowling_style: string | null
+          created_at: string | null
+          experience_level: string | null
+          id: string
+          is_active: boolean | null
+          playing_foot: string | null
+          playing_style: Json | null
+          preferred_positions: string[] | null
+          skill_level: number | null
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          batting_style?: string | null
+          bowling_style?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          playing_foot?: string | null
+          playing_style?: Json | null
+          preferred_positions?: string[] | null
+          skill_level?: number | null
+          sport: string
+          user_id: string
+        }
+        Update: {
+          batting_style?: string | null
+          bowling_style?: string | null
+          created_at?: string | null
+          experience_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          playing_foot?: string | null
+          playing_style?: Json | null
+          preferred_positions?: string[] | null
+          skill_level?: number | null
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
