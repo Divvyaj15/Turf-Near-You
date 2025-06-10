@@ -12,7 +12,8 @@ import {
   MessageCircle, 
   UserPlus,
   Shield,
-  Trophy
+  Trophy,
+  Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -86,7 +87,10 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
   };
 
   const getSportSpecificInfo = (player: any, sport: string) => {
-    const sportsProfile = player.user_sports_profiles?.[0];
+    const sportsProfile = Array.isArray(player.user_sports_profiles) 
+      ? player.user_sports_profiles[0] 
+      : null;
+    
     if (!sportsProfile) return null;
 
     switch (sport) {
@@ -138,7 +142,9 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {players?.map((player) => {
         const availability = getAvailabilityStatus(player);
-        const sportsProfile = player.user_sports_profiles?.[0];
+        const sportsProfile = Array.isArray(player.user_sports_profiles) 
+          ? player.user_sports_profiles[0] 
+          : null;
         const sportInfo = getSportSpecificInfo(player, sport);
 
         return (
