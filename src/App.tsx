@@ -12,6 +12,7 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import FindPlayers from "./pages/FindPlayers";
 import PlayerProfileSetup from "./pages/PlayerProfileSetup";
+import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                 <Route path="/find-players" element={<FindPlayers />} />
                 <Route path="/player-profile-setup" element={<PlayerProfileSetup />} />
+                <Route path="/my-profile" element={<MyProfile />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
