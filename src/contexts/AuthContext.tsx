@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,19 +22,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Setting up auth state listener...');
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Fetch user profile to get role
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
+          
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching profile:', error);
+          }
           
           setUserRole(profile?.role || 'customer');
         } else {
@@ -46,16 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         // Fetch user profile to get role
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching initial profile:', error);
+        }
         
         setUserRole(profile?.role || 'customer');
       }
@@ -67,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string, role: string = 'customer') => {
+    console.log('Sign up attempt:', email, role);
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -80,29 +93,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
+    
+    console.log('Sign up result:', error);
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting sign in...');
-    let timeout: NodeJS.Timeout;
+    console.log('Sign in attempt:', email);
+    
     try {
-      const signInPromise = supabase.auth.signInWithPassword({ email, password });
-      const timeoutPromise = new Promise((_, reject) =>
-        timeout = setTimeout(() => reject(new Error('Request timed out')), 10000)
-      );
-      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
-      console.log('Sign in result:', error);
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
+      console.log('Sign in result:', { user: data.user?.email, error });
       return { error };
     } catch (error) {
       console.error('Sign in error:', error);
       return { error };
-    } finally {
-      clearTimeout(timeout);
     }
   };
 
   const signOut = async () => {
+    console.log('Signing out...');
     await supabase.auth.signOut();
     setUserRole(null);
   };

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -8,9 +8,11 @@ import { ArrowLeft } from 'lucide-react';
 import AuthForm from '@/components/AuthForm';
 import RegistrationSteps from '@/components/RegistrationSteps';
 import CompletionScreen from '@/components/CompletionScreen';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -23,14 +25,42 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect based on user role
+  // Check if user has a profile and redirect accordingly
   useEffect(() => {
-    if (user && userRole) {
-      if (userRole === 'turf_owner') {
-        navigate('/owner-dashboard');
-      } else {
-        navigate('/');
+    const checkUserProfile = async () => {
+      if (user && userRole) {
+        console.log('User authenticated, checking profile...');
+        
+        try {
+          // Check if user has a profile
+          const { data: profile, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error checking profile:', error);
+            return;
+          }
+
+          if (userRole === 'turf_owner') {
+            navigate('/owner-dashboard');
+          } else if (profile) {
+            // User has a profile, redirect to find players
+            navigate('/find-players');
+          } else {
+            // User doesn't have a profile, redirect to profile setup
+            navigate('/player-profile-setup');
+          }
+        } catch (error) {
+          console.error('Error in profile check:', error);
+        }
       }
+    };
+
+    if (user && userRole) {
+      checkUserProfile();
     }
   }, [user, userRole, navigate]);
 
@@ -68,10 +98,12 @@ const Auth = () => {
         // For customer, proceed with normal signup
         result = await signUp(email, password, fullName, selectedRole);
       } else {
+        console.log('Attempting sign in with:', email);
         result = await signIn(email, password);
       }
 
       if (result.error) {
+        console.error('Auth error:', result.error);
         toast({
           title: "Error",
           description: result.error.message,
@@ -90,7 +122,8 @@ const Auth = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Unexpected auth error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -168,22 +201,6 @@ const Auth = () => {
   const handleReturnHome = () => {
     navigate('/');
   };
-
-  const backgroundContainer = (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Back to Home Button */}
-        <Button 
-          variant="ghost" 
-          className="text-white hover:bg-white/10 mb-6"
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-      </div>
-    </div>
-  );
 
   if (step === 'role' || step === 'owner-details') {
     return (
