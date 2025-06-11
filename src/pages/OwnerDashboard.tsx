@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ const OwnerDashboard = () => {
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'dashboard' | 'addturf' | 'bookings' | 'turfs'>('dashboard');
+  const [showRegistrationPrompt, setShowRegistrationPrompt] = useState(false);
   
   const { data: turfs = [], refetch: refetchTurfs } = useOwnerTurfs();
   const { data: bookings = [] } = useOwnerBookings();
@@ -76,7 +78,12 @@ const OwnerDashboard = () => {
         throw error;
       }
 
-      setOwnerData(data);
+      if (!data) {
+        // No owner data found, show registration prompt
+        setShowRegistrationPrompt(true);
+      } else {
+        setOwnerData(data);
+      }
     } catch (error: any) {
       console.error('Error fetching owner data:', error);
       toast({
@@ -107,6 +114,11 @@ const OwnerDashboard = () => {
     });
   };
 
+  const handleOwnerRegistrationStart = () => {
+    setShowRegistrationPrompt(false);
+    setCurrentView('addturf');
+  };
+
   if (currentView === 'addturf') {
     return (
       <AddTurfForm 
@@ -123,6 +135,42 @@ const OwnerDashboard = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show registration prompt for new turf owners
+  if (showRegistrationPrompt) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <Building2 className="w-16 h-16 text-primary mx-auto mb-6" />
+            <h2 className="text-2xl font-bold mb-4">Welcome to Turf Owner Dashboard!</h2>
+            <p className="text-muted-foreground mb-6">
+              Are you a turf owner looking to register your turf and start managing bookings?
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={handleOwnerRegistrationStart}
+                className="w-full"
+                size="lg"
+              >
+                Yes, I want to register my turf
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/')}
+                className="w-full"
+              >
+                No, take me back to home
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              By registering, you'll receive a confirmation email for verification.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
