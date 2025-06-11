@@ -102,9 +102,9 @@ interface TurfSearchProps {
 const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
   const { data: turfs = [], isLoading } = useTurfs();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedArea, setSelectedArea] = useState<string>('');
-  const [selectedSport, setSelectedSport] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<string>('');
+  const [selectedArea, setSelectedArea] = useState<string>('all');
+  const [selectedSport, setSelectedSport] = useState<string>('all');
+  const [priceRange, setPriceRange] = useState<string>('all');
 
   const areas = [...new Set(turfs.map(turf => turf.area))];
   const sports = [...new Set(turfs.flatMap(turf => turf.supported_sports || []))];
@@ -112,9 +112,9 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
   const filteredTurfs = turfs.filter(turf => {
     const matchesSearch = turf.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          turf.area.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesArea = !selectedArea || turf.area === selectedArea;
-    const matchesSport = !selectedSport || turf.supported_sports?.includes(selectedSport);
-    const matchesPrice = !priceRange || (() => {
+    const matchesArea = selectedArea === 'all' || turf.area === selectedArea;
+    const matchesSport = selectedSport === 'all' || turf.supported_sports?.includes(selectedSport);
+    const matchesPrice = priceRange === 'all' || (() => {
       const price = turf.base_price_per_hour;
       switch (priceRange) {
         case 'low': return price <= 500;
@@ -152,7 +152,7 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
               <SelectValue placeholder="Select Area" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Areas</SelectItem>
+              <SelectItem value="all">All Areas</SelectItem>
               {areas.map(area => (
                 <SelectItem key={area} value={area}>{area}</SelectItem>
               ))}
@@ -164,7 +164,7 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
               <SelectValue placeholder="Select Sport" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sports</SelectItem>
+              <SelectItem value="all">All Sports</SelectItem>
               {sports.map(sport => (
                 <SelectItem key={sport} value={sport}>{sport}</SelectItem>
               ))}
@@ -176,7 +176,7 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
               <SelectValue placeholder="Price Range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Prices</SelectItem>
+              <SelectItem value="all">All Prices</SelectItem>
               <SelectItem value="low">Under ₹500</SelectItem>
               <SelectItem value="medium">₹500 - ₹1000</SelectItem>
               <SelectItem value="high">Above ₹1000</SelectItem>
@@ -184,16 +184,16 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
           </Select>
         </div>
 
-        {(searchTerm || selectedArea || selectedSport || priceRange) && (
+        {(searchTerm || selectedArea !== 'all' || selectedSport !== 'all' || priceRange !== 'all') && (
           <div className="mt-4 flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
                 setSearchTerm('');
-                setSelectedArea('');
-                setSelectedSport('');
-                setPriceRange('');
+                setSelectedArea('all');
+                setSelectedSport('all');
+                setPriceRange('all');
               }}
             >
               Clear Filters
