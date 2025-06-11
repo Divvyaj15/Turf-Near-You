@@ -1,59 +1,157 @@
-# Welcome to the Turf-Near-You project
+# Turf-Near-You 🏏
 
-**URL**: https://lovable.dev/projects/98cc11e2-f383-45d7-aa9f-1726b3cc554a
+A modern sports facility management platform that connects sports enthusiasts with turf facilities. Built with React, TypeScript, and Supabase.
 
-## Project info
+## 🌟 Features
 
-**Use your preferred IDE**
+- **Role-Based Authentication**
+  - Separate interfaces for customers and turf owners
+  - Secure phone number verification
+  - Protected routes based on user roles
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Customer Features**
+  - Browse available sports facilities
+  - Book slots in real-time
+  - View booking history
+  - Find and connect with other players
+  - Manage personal profile
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Owner Features**
+  - Manage facility listings
+  - Handle booking requests
+  - View analytics and reports
+  - Update facility information
+  - Manage availability
 
-Follow these steps:
+## 🛠️ Tech Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **Frontend**
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui components
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **Backend**
+  - Supabase
+  - PostgreSQL
+  - Real-time subscriptions
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Authentication**
+  - Supabase Auth
+  - Phone number verification
+  - Role-based access control
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 📸 Screenshots
+
+### Home Page
+![Home Page](./assets/screenshots/home.png)
+
+### Authentication
+![Authentication](./assets/screenshots/auth.png)
+
+### Owner Dashboard
+![Owner Dashboard](./assets/screenshots/owner-dashboard.png)
+
+### Customer Dashboard
+![Customer Dashboard](./assets/screenshots/customer-dashboard.png)
+
+### Profile Page
+![Profile Page](./assets/screenshots/profile.png)
+
+### Booking Interface
+![Booking Interface](./assets/screenshots/booking.png)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/Divvyaj15/Turf-Near-You.git
+cd Turf-Near-You
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Set up environment variables
+```bash
+cp .env.example .env.local
+```
+Fill in your Supabase credentials in `.env.local`
 
-**Use GitHub Codespaces**
+4. Start the development server
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏗️ Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/     # Reusable UI components
+├── contexts/       # React contexts
+├── hooks/         # Custom hooks
+├── pages/         # Page components
+├── types/         # TypeScript types
+└── utils/         # Utility functions
+```
 
-This project is built with:
+## 🔑 Key Features Implementation
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Authentication Flow
+- Phone number verification
+- Role-based access control
+- Protected routes
 
+### Booking System
+- Real-time availability checking
+- Booking confirmation
+- Payment integration (coming soon)
 
+### User Profiles
+- Customer profiles
+- Owner profiles
+- Facility management
 
-Yes, you can!
+## 🤝 Contributing
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Divvya Jain** - [GitHub](https://github.com/Divvyaj15)
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.io/) for the backend services
+- [Tailwind CSS](https://tailwindcss.com/) for the styling
+- [shadcn/ui](https://ui.shadcn.com/) for the UI components
+
+## 📞 Contact
+
+Divvya Jain - [LinkedIn](https://www.linkedin.com/in/divvya-jain-16486b302)
+
+Project Link: [https://github.com/Divvyaj15/Turf-Near-You](https://github.com/Divvyaj15/Turf-Near-You)
