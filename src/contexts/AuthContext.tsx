@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('Setting up auth state listener...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -31,18 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile to get role
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching profile:', error);
-          }
-          
-          setUserRole(profile?.role || 'customer');
+          // Use setTimeout to prevent blocking the auth state change
+          setTimeout(async () => {
+            try {
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              
+              if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching profile:', error);
+              }
+              
+              setUserRole(profile?.role || 'customer');
+            } catch (error) {
+              console.error('Error in profile fetch:', error);
+              setUserRole('customer');
+            }
+          }, 0);
         } else {
           setUserRole(null);
         }
@@ -58,18 +66,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch user profile to get role
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching initial profile:', error);
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching initial profile:', error);
+          }
+          
+          setUserRole(profile?.role || 'customer');
+        } catch (error) {
+          console.error('Error in initial profile fetch:', error);
+          setUserRole('customer');
         }
-        
-        setUserRole(profile?.role || 'customer');
       }
       
       setLoading(false);
@@ -117,8 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log('Signing out...');
-    await supabase.auth.signOut();
-    setUserRole(null);
+    try {
+      await supabase.auth.signOut();
+      setUserRole(null);
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (

@@ -67,15 +67,23 @@ const OwnerDashboard = () => {
   }, [user, navigate]);
 
   const fetchOwnerData = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('turf_owners')
         .select('*')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        throw error;
+        console.error('Error fetching owner data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive"
+        });
+        return;
       }
 
       if (!data) {
@@ -83,6 +91,7 @@ const OwnerDashboard = () => {
         setShowRegistrationPrompt(true);
       } else {
         setOwnerData(data);
+        setShowRegistrationPrompt(false);
       }
     } catch (error: any) {
       console.error('Error fetching owner data:', error);
@@ -97,17 +106,27 @@ const OwnerDashboard = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
+    try {
+      await signOut();
+      navigate('/');
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddTurfSuccess = () => {
     setCurrentView('dashboard');
     refetchTurfs();
+    fetchOwnerData(); // Refresh owner data
     toast({
       title: "Success!",
       description: "Your turf has been added successfully.",
@@ -119,15 +138,6 @@ const OwnerDashboard = () => {
     setCurrentView('addturf');
   };
 
-  if (currentView === 'addturf') {
-    return (
-      <AddTurfForm 
-        onBack={() => setCurrentView('dashboard')}
-        onSuccess={handleAddTurfSuccess}
-      />
-    );
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -136,6 +146,15 @@ const OwnerDashboard = () => {
           <p>Loading dashboard...</p>
         </div>
       </div>
+    );
+  }
+
+  if (currentView === 'addturf') {
+    return (
+      <AddTurfForm 
+        onBack={() => setCurrentView('dashboard')}
+        onSuccess={handleAddTurfSuccess}
+      />
     );
   }
 
@@ -185,8 +204,8 @@ const OwnerDashboard = () => {
             <p className="text-muted-foreground mb-4">
               You need to complete your turf owner registration to access the dashboard.
             </p>
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              Complete Registration
+            <Button onClick={handleOwnerRegistrationStart} className="w-full">
+              Register as Turf Owner
             </Button>
           </CardContent>
         </Card>
