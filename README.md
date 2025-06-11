@@ -1,9 +1,10 @@
-# Welcome to your Lovable project
+# Welcome to the Turf-Near-You project
 
-## Project info
+## Project inf
 
 **URL**: https://lovable.dev/projects/98cc11e2-f383-45d7-aa9f-1726b3cc554a
 
+## Project info
 
 **Use your preferred IDE**
 
