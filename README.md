@@ -15,6 +15,18 @@ A modern sports facility management platform that connects sports enthusiasts wi
   - View booking history
   - Find and connect with other players
   - Manage personal profile
+  - Create or join sports groups
+  - Find players for your game
+  - Join games as an individual player
+
+- **Player Matching System**
+  - Post games needing additional players
+  - Set required number of players
+  - Specify skill level requirements
+  - Location-based player matching
+  - Real-time availability updates
+  - Join random groups looking for players
+  - Filter games by sport, location, and skill level
 
 - **Owner Features**
   - Manage facility listings
@@ -136,9 +148,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
