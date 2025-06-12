@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +20,12 @@ interface TurfOwnerData {
   verification_status: 'pending' | 'verified' | 'rejected';
   rejection_reason?: string;
   created_at: string;
+  business_type?: string;
+  contact_email?: string;
+  owner_name?: string;
+  updated_at?: string;
+  user_id: string;
+  years_of_operation?: number;
 }
 
 const OwnerDashboard = () => {
@@ -68,7 +73,16 @@ const OwnerDashboard = () => {
         return;
       }
 
-      setOwnerData(data);
+      // Type assertion to ensure verification_status matches our interface
+      if (data) {
+        const ownerDataWithTypedStatus = {
+          ...data,
+          verification_status: data.verification_status as 'pending' | 'verified' | 'rejected'
+        };
+        setOwnerData(ownerDataWithTypedStatus);
+      } else {
+        setOwnerData(null);
+      }
     } catch (error) {
       console.error('Error in fetchOwnerData:', error);
     } finally {
@@ -109,6 +123,15 @@ const OwnerDashboard = () => {
   const handleCloseAddTurf = () => {
     setShowAddTurf(false);
     refetchTurfs(); // Refresh turfs when closing the form
+  };
+
+  const handleAddTurfSuccess = () => {
+    setShowAddTurf(false);
+    refetchTurfs();
+    toast({
+      title: "Success",
+      description: "Turf has been submitted successfully!",
+    });
   };
 
   if (loading) {
@@ -299,7 +322,10 @@ const OwnerDashboard = () => {
                   <XCircle className="w-4 h-4" />
                 </Button>
               </div>
-              <AddTurfForm />
+              <AddTurfForm 
+                onBack={handleCloseAddTurf}
+                onSuccess={handleAddTurfSuccess}
+              />
             </div>
           </div>
         </div>
