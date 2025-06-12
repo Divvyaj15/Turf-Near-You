@@ -16,10 +16,11 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'customer' | 'turf_owner' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete'>('auth');
-  const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string} | null>(null);
+  const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string, phoneNumber: string} | null>(null);
   
   const { signUp, signIn, user, userRole } = useAuth();
   const { toast } = useToast();
@@ -80,6 +81,16 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+
+        if (!phoneNumber.trim()) {
+          toast({
+            title: "Error",
+            description: "Please enter your phone number",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
         
         if (!selectedRole) {
           setStep('role');
@@ -89,14 +100,14 @@ const Auth = () => {
         
         // For turf owner, store temp data and go to owner details
         if (selectedRole === 'turf_owner') {
-          setTempUserData({ email, password, fullName });
+          setTempUserData({ email, password, fullName, phoneNumber });
           setStep('owner-details');
           setIsLoading(false);
           return;
         }
         
         // For customer, proceed with normal signup
-        result = await signUp(email, password, fullName, selectedRole);
+        result = await signUp(email, password, fullName, selectedRole, phoneNumber);
       } else {
         console.log('Attempting sign in with:', email);
         result = await signIn(email, password);
@@ -138,6 +149,7 @@ const Auth = () => {
     setEmail('');
     setPassword('');
     setFullName('');
+    setPhoneNumber('');
     setSelectedRole(null);
     setStep('auth');
     setIsSignUp(false);
@@ -156,7 +168,7 @@ const Auth = () => {
     
     try {
       // First create the user account
-      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner');
+      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner', tempUserData.phoneNumber);
       
       if (result.error) {
         toast({
@@ -243,11 +255,13 @@ const Auth = () => {
           email={email}
           password={password}
           fullName={fullName}
+          phoneNumber={phoneNumber}
           selectedRole={selectedRole}
           isLoading={isLoading}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onFullNameChange={setFullName}
+          onPhoneNumberChange={setPhoneNumber}
           onSubmit={handleSubmit}
           onToggleMode={handleToggleMode}
           onChangeRole={handleChangeRole}

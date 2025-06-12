@@ -11,11 +11,13 @@ interface AuthFormProps {
   email: string;
   password: string;
   fullName: string;
+  phoneNumber: string;
   selectedRole: 'customer' | 'turf_owner' | null;
   isLoading: boolean;
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
   onFullNameChange: (fullName: string) => void;
+  onPhoneNumberChange: (phoneNumber: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onToggleMode: () => void;
   onChangeRole: () => void;
@@ -26,11 +28,13 @@ const AuthForm: React.FC<AuthFormProps> = ({
   email,
   password,
   fullName,
+  phoneNumber,
   selectedRole,
   isLoading,
   onEmailChange,
   onPasswordChange,
   onFullNameChange,
+  onPhoneNumberChange,
   onSubmit,
   onToggleMode,
   onChangeRole
@@ -78,17 +82,31 @@ const AuthForm: React.FC<AuthFormProps> = ({
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => onFullNameChange(e.target.value)}
-                required={isSignUp}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => onFullNameChange(e.target.value)}
+                  required={isSignUp}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phoneNumber}
+                  onChange={(e) => onPhoneNumberChange(e.target.value)}
+                  required={isSignUp}
+                />
+              </div>
+            </>
           )}
           
           <div className="space-y-2">
