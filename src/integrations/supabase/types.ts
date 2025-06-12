@@ -500,6 +500,9 @@ export type Database = {
           max_travel_distance: number | null
           overall_rating: number | null
           phone_number: string
+          phone_verification_code: string | null
+          phone_verification_expires_at: string | null
+          phone_verified: boolean | null
           preferred_contact: string | null
           profile_image_url: string | null
           total_games_played: number | null
@@ -521,6 +524,9 @@ export type Database = {
           max_travel_distance?: number | null
           overall_rating?: number | null
           phone_number: string
+          phone_verification_code?: string | null
+          phone_verification_expires_at?: string | null
+          phone_verified?: boolean | null
           preferred_contact?: string | null
           profile_image_url?: string | null
           total_games_played?: number | null
@@ -542,6 +548,9 @@ export type Database = {
           max_travel_distance?: number | null
           overall_rating?: number | null
           phone_number?: string
+          phone_verification_code?: string | null
+          phone_verification_expires_at?: string | null
+          phone_verified?: boolean | null
           preferred_contact?: string | null
           profile_image_url?: string | null
           total_games_played?: number | null
@@ -600,7 +609,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_verification_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       user_role: "customer" | "turf_owner" | "admin"
