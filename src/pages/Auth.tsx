@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,15 +48,11 @@ const Auth = () => {
           if (userRole === 'turf_owner') {
             navigate('/owner-dashboard');
           } else if (profile) {
-            // Check if phone is verified
-            if (!profile.phone_verified && profile.phone_number) {
-              navigate('/phone-verification');
-            } else {
-              navigate('/find-players');
-            }
+            // User has a profile, redirect to find players
+            navigate('/find-players');
           } else {
-            // User doesn't have a profile, redirect to phone verification first
-            navigate('/phone-verification');
+            // User doesn't have a profile, redirect to profile setup
+            navigate('/player-profile-setup');
           }
         } catch (error) {
           console.error('Error in profile check:', error);

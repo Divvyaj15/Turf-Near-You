@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Building, Users, Calendar, AlertCircle, Clock, CheckCircle, XCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, Building, Users, Calendar, AlertCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
 import AddTurfForm from '@/components/AddTurfForm';
 import TurfManagement from '@/components/TurfManagement';
 import BookingManagement from '@/components/BookingManagement';
@@ -21,12 +21,6 @@ interface TurfOwnerData {
   verification_status: 'pending' | 'verified' | 'rejected';
   rejection_reason?: string;
   created_at: string;
-  business_type?: string;
-  contact_email?: string;
-  owner_name?: string;
-  updated_at?: string;
-  user_id: string;
-  years_of_operation?: number;
 }
 
 const OwnerDashboard = () => {
@@ -36,12 +30,6 @@ const OwnerDashboard = () => {
   const [showAddTurf, setShowAddTurf] = useState(false);
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dashboardStats, setDashboardStats] = useState({
-    totalBookings: 0,
-    totalRevenue: 0,
-    activeBookings: 0,
-    totalTurfs: 0
-  });
   
   // Use the turfs hook to get turfs data
   const { data: turfs = [], refetch: refetchTurfs } = useTurfs();
@@ -59,12 +47,6 @@ const OwnerDashboard = () => {
 
     fetchOwnerData();
   }, [user, userRole, navigate]);
-
-  useEffect(() => {
-    if (ownerData && ownerData.verification_status === 'verified') {
-      fetchDashboardStats();
-    }
-  }, [ownerData, turfs]);
 
   const fetchOwnerData = async () => {
     if (!user) return;
@@ -86,65 +68,11 @@ const OwnerDashboard = () => {
         return;
       }
 
-      // Type assertion to ensure verification_status matches our interface
-      if (data) {
-        const ownerDataWithTypedStatus = {
-          ...data,
-          verification_status: data.verification_status as 'pending' | 'verified' | 'rejected'
-        };
-        setOwnerData(ownerDataWithTypedStatus);
-      } else {
-        setOwnerData(null);
-      }
+      setOwnerData(data);
     } catch (error) {
       console.error('Error in fetchOwnerData:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDashboardStats = async () => {
-    if (!ownerData) return;
-
-    try {
-      // Get owner's turfs
-      const turfIds = turfs.map(turf => turf.id);
-      
-      if (turfIds.length === 0) {
-        setDashboardStats({
-          totalBookings: 0,
-          totalRevenue: 0,
-          activeBookings: 0,
-          totalTurfs: 0
-        });
-        return;
-      }
-
-      // Fetch booking statistics
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*')
-        .in('turf_id', turfIds);
-
-      if (bookingsError) {
-        console.error('Error fetching bookings:', bookingsError);
-        return;
-      }
-
-      const totalBookings = bookings?.length || 0;
-      const totalRevenue = bookings?.reduce((sum, booking) => sum + (booking.total_amount || 0), 0) || 0;
-      const activeBookings = bookings?.filter(booking => 
-        booking.status === 'confirmed' && new Date(booking.booking_date) >= new Date()
-      ).length || 0;
-
-      setDashboardStats({
-        totalBookings,
-        totalRevenue,
-        activeBookings,
-        totalTurfs: turfs.length
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
     }
   };
 
@@ -181,15 +109,6 @@ const OwnerDashboard = () => {
   const handleCloseAddTurf = () => {
     setShowAddTurf(false);
     refetchTurfs(); // Refresh turfs when closing the form
-  };
-
-  const handleAddTurfSuccess = () => {
-    setShowAddTurf(false);
-    refetchTurfs();
-    toast({
-      title: "Success",
-      description: "Turf has been submitted successfully!",
-    });
   };
 
   if (loading) {
@@ -304,65 +223,6 @@ const OwnerDashboard = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Building className="w-8 h-8 text-primary mr-4" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Turfs</p>
-                <p className="text-2xl font-bold">
-                  {dashboardStats.totalTurfs || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="w-8 h-8 text-blue-600 mr-4" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                <p className="text-2xl font-bold">
-                  {dashboardStats.totalBookings || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <TrendingUp className="w-8 h-8 text-green-600 mr-4" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Bookings</p>
-                <p className="text-2xl font-bold">
-                  {dashboardStats.activeBookings || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="w-8 h-8 text-yellow-600 mr-4" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold">
-                  ₹{dashboardStats.totalRevenue ? dashboardStats.totalRevenue.toLocaleString() : '0'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Owner Info Card */}
       <Card>
         <CardHeader>
@@ -439,10 +299,7 @@ const OwnerDashboard = () => {
                   <XCircle className="w-4 h-4" />
                 </Button>
               </div>
-              <AddTurfForm 
-                onBack={handleCloseAddTurf}
-                onSuccess={handleAddTurfSuccess}
-              />
+              <AddTurfForm />
             </div>
           </div>
         </div>
