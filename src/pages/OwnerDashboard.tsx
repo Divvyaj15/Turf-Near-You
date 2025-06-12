@@ -11,12 +11,13 @@ import { Plus, Building, Users, Calendar, AlertCircle, Clock, CheckCircle, XCirc
 import AddTurfForm from '@/components/AddTurfForm';
 import TurfManagement from '@/components/TurfManagement';
 import BookingManagement from '@/components/BookingManagement';
+import { useTurfs } from '@/hooks/useTurfs';
 
 interface TurfOwnerData {
   id: string;
   business_name: string;
-  business_address: string;
-  phone_number: string;
+  address: string;
+  contact_phone: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   rejection_reason?: string;
   created_at: string;
@@ -29,6 +30,9 @@ const OwnerDashboard = () => {
   const [showAddTurf, setShowAddTurf] = useState(false);
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Use the turfs hook to get turfs data
+  const { data: turfs = [], refetch: refetchTurfs } = useTurfs();
 
   useEffect(() => {
     if (!user) {
@@ -51,7 +55,7 @@ const OwnerDashboard = () => {
       const { data, error } = await supabase
         .from('turf_owners')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
@@ -96,6 +100,15 @@ const OwnerDashboard = () => {
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
+  };
+
+  const handleTurfUpdate = () => {
+    refetchTurfs();
+  };
+
+  const handleCloseAddTurf = () => {
+    setShowAddTurf(false);
+    refetchTurfs(); // Refresh turfs when closing the form
   };
 
   if (loading) {
@@ -226,11 +239,11 @@ const OwnerDashboard = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Phone Number</label>
-              <p className="text-lg">{ownerData.phone_number}</p>
+              <p className="text-lg">{ownerData.contact_phone}</p>
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium text-gray-500">Business Address</label>
-              <p className="text-lg">{ownerData.business_address}</p>
+              <p className="text-lg">{ownerData.address}</p>
             </div>
           </div>
         </CardContent>
@@ -270,7 +283,7 @@ const OwnerDashboard = () => {
       </div>
 
       {/* Turf Management */}
-      <TurfManagement />
+      <TurfManagement turfs={turfs} onTurfUpdate={handleTurfUpdate} />
 
       {/* Booking Management */}
       <BookingManagement />
@@ -279,7 +292,15 @@ const OwnerDashboard = () => {
       {showAddTurf && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <AddTurfForm onClose={() => setShowAddTurf(false)} />
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Add New Turf</h2>
+                <Button variant="ghost" onClick={handleCloseAddTurf}>
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
+              <AddTurfForm />
+            </div>
           </div>
         </div>
       )}
