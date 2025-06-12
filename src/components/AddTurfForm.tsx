@@ -1,483 +1,492 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Upload, X, Building2, MapPin, Camera } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Building2, MapPin, DollarSign, Clock, Users, Check, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface AddTurfFormProps {
   onBack: () => void;
   onSuccess: () => void;
 }
 
-const SPORTS_OPTIONS = [
-  'Football', 'Cricket', 'Basketball', 'Tennis', 'Badminton', 
-  'Volleyball', 'Hockey', 'Swimming', 'Table Tennis'
-];
-
-const AMENITIES_OPTIONS = [
-  'Parking', 'Restrooms', 'Changing Rooms', 'Shower', 'Drinking Water',
-  'First Aid', 'Equipment Rental', 'Lighting', 'Security', 'Cafeteria'
-];
-
-const SURFACE_TYPES = [
-  'Natural Grass', 'Artificial Turf', 'Concrete', 'Wooden', 'Rubber', 'Clay'
-];
-
 const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [images, setImages] = useState<File[]>([]);
-  const [coverImageIndex, setCoverImageIndex] = useState(0);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    address: '',
     area: '',
-    contactPhone: '',
-    contactEmail: '',
-    supportedSports: [] as string[],
-    amenities: [] as string[],
-    surfaceType: '',
+    address: '',
+    description: '',
+    contact_phone: '',
+    contact_email: '',
+    base_price_per_hour: '',
     capacity: '',
-    basePricePerHour: '',
-    weekendPremiumPercentage: '0',
-    peakHoursPremiumPercentage: '0',
-    peakHoursStart: '18:00',
-    peakHoursEnd: '22:00'
+    surface_type: 'grass',
+    weekend_premium_percentage: '0',
+    peak_hours_premium_percentage: '0',
   });
 
-  const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const [businessData, setBusinessData] = useState({
+    business_name: '',
+    owner_name: '',
+    business_type: '',
+    contact_phone: '',
+    contact_email: '',
+    address: '',
+    years_of_operation: 0,
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleSportsChange = (sport: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({ 
-        ...prev, 
-        supportedSports: [...prev.supportedSports, sport] 
-      }));
-    } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        supportedSports: prev.supportedSports.filter(s => s !== sport) 
-      }));
-    }
+  const handleBusinessInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setBusinessData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleAmenitiesChange = (amenity: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({ 
-        ...prev, 
-        amenities: [...prev.amenities, amenity] 
-      }));
-    } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        amenities: prev.amenities.filter(a => a !== amenity) 
-      }));
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length + images.length > 5) {
-      toast({
-        title: "Too many images",
-        description: "You can upload maximum 5 images",
-        variant: "destructive"
-      });
-      return;
-    }
-    setImages(prev => [...prev, ...files]);
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    if (coverImageIndex >= index && coverImageIndex > 0) {
-      setCoverImageIndex(prev => prev - 1);
-    }
-  };
-
-  const uploadImages = async (ownerId: string) => {
-    const uploadedUrls: string[] = [];
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'sports' | 'amenities') => {
+    const { value, checked } = e.target;
     
-    for (let i = 0; i < images.length; i++) {
-      const file = images[i];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/${Date.now()}-${i}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('turf-images')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('turf-images')
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(publicUrl);
+    if (type === 'sports') {
+      setSelectedSports(prev =>
+        checked ? [...prev, value] : prev.filter(item => item !== value)
+      );
+    } else {
+      setSelectedAmenities(prev =>
+        checked ? [...prev, value] : prev.filter(item => item !== value)
+      );
     }
-
-    return uploadedUrls;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
-      // Get turf owner ID
-      const { data: ownerData, error: ownerError } = await supabase
-        .from('turf_owners')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (ownerError) throw new Error('Owner profile not found');
-
-      // Upload images
-      let imageUrls: string[] = [];
-      let coverImageUrl = '';
-      
-      if (images.length > 0) {
-        imageUrls = await uploadImages(ownerData.id);
-        coverImageUrl = imageUrls[coverImageIndex] || imageUrls[0];
+      if (!user) {
+        throw new Error('User not authenticated');
       }
 
-      // Insert turf data
-      const { error: insertError } = await supabase
+      // Validate required fields
+      if (!formData.name || !formData.area || !formData.address || !formData.base_price_per_hour) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // First, create or update turf owner record
+      const ownerData = {
+        user_id: user.id,
+        business_name: businessData.business_name,
+        owner_name: businessData.owner_name,
+        business_type: businessData.business_type,
+        contact_phone: businessData.contact_phone,
+        contact_email: businessData.contact_email,
+        address: businessData.address,
+        years_of_operation: businessData.years_of_operation,
+        verification_status: 'pending'
+      };
+
+      const { data: ownerResult, error: ownerError } = await supabase
+        .from('turf_owners')
+        .upsert(ownerData, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        })
+        .select()
+        .single();
+
+      if (ownerError) {
+        console.error('Owner creation error:', ownerError);
+        throw new Error('Failed to create owner profile');
+      }
+
+      // Create turf record with pending status
+      const turfData = {
+        ...formData,
+        owner_id: ownerResult.id,
+        status: 'pending', // Set to pending instead of active
+        supported_sports: selectedSports,
+        amenities: selectedAmenities,
+        base_price_per_hour: Number(formData.base_price_per_hour),
+        capacity: Number(formData.capacity),
+        weekend_premium_percentage: Number(formData.weekend_premium_percentage),
+        peak_hours_premium_percentage: Number(formData.peak_hours_premium_percentage)
+      };
+
+      const { data: turfResult, error: turfError } = await supabase
         .from('turfs')
-        .insert({
-          owner_id: ownerData.id,
-          name: formData.name,
-          description: formData.description || null,
-          address: formData.address,
-          area: formData.area,
-          contact_phone: formData.contactPhone || null,
-          contact_email: formData.contactEmail || null,
-          supported_sports: formData.supportedSports,
-          amenities: formData.amenities,
-          surface_type: formData.surfaceType || null,
-          capacity: formData.capacity ? parseInt(formData.capacity) : null,
-          cover_image_url: coverImageUrl || null,
-          images: imageUrls,
-          base_price_per_hour: parseFloat(formData.basePricePerHour),
-          weekend_premium_percentage: parseFloat(formData.weekendPremiumPercentage),
-          peak_hours_premium_percentage: parseFloat(formData.peakHoursPremiumPercentage),
-          peak_hours_start: formData.peakHoursStart,
-          peak_hours_end: formData.peakHoursEnd
+        .insert(turfData)
+        .select()
+        .single();
+
+      if (turfError) {
+        console.error('Turf creation error:', turfError);
+        throw new Error('Failed to create turf');
+      }
+
+      // Send approval email
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-turf-approval-email', {
+          body: {
+            turfData: turfResult,
+            ownerData: ownerResult
+          }
         });
 
-      if (insertError) throw insertError;
+        if (emailError) {
+          console.error('Email sending error:', emailError);
+          // Don't throw error here as turf was created successfully
+        }
+      } catch (emailError) {
+        console.error('Email function error:', emailError);
+        // Continue as turf was created successfully
+      }
 
       toast({
-        title: "Turf Added Successfully!",
-        description: "Your turf has been registered and is now live.",
+        title: "Turf Submitted Successfully!",
+        description: "Your turf has been submitted for approval. You'll be notified once it's reviewed.",
       });
 
       onSuccess();
     } catch (error: any) {
-      console.error('Error adding turf:', error);
+      console.error('Submission error:', error);
       toast({
-        title: "Failed to Add Turf",
-        description: error.message || "Please try again later.",
+        title: "Error",
+        description: error.message || "Failed to submit turf. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <Card>
+    <div className="min-h-screen bg-gray-50 py-6">
+      <div className="container mx-auto px-4">
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
+        <Card className="shadow-2xl">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-3">
-              <Building2 className="w-6 h-6 text-primary" />
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-10 h-10 cricket-gradient rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">TC</span>
+              </div>
+              <span className="text-2xl font-bold text-primary">Add New Turf</span>
             </div>
-            <CardTitle className="text-2xl">Add New Turf</CardTitle>
+            <CardTitle className="text-2xl">List Your Turf</CardTitle>
             <p className="text-muted-foreground">
-              Register your turf to start accepting bookings
+              Provide details about your turf to get started
             </p>
           </CardHeader>
-          
+
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <MapPin className="w-5 h-5 mr-2" />
-                  Basic Information
-                </h3>
-                
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Business Information */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Business Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Turf Name *</Label>
+                    <Label htmlFor="business_name">Business Name</Label>
+                    <Input
+                      id="business_name"
+                      type="text"
+                      placeholder="Enter business name"
+                      value={businessData.business_name}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="owner_name">Owner Name</Label>
+                    <Input
+                      id="owner_name"
+                      type="text"
+                      placeholder="Enter owner name"
+                      value={businessData.owner_name}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="business_type">Business Type</Label>
+                    <Input
+                      id="business_type"
+                      type="text"
+                      placeholder="Enter business type"
+                      value={businessData.business_type}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="years_of_operation">Years of Operation</Label>
+                    <Input
+                      id="years_of_operation"
+                      type="number"
+                      placeholder="Enter years of operation"
+                      value={businessData.years_of_operation}
+                      onChange={(e) => handleBusinessInputChange({
+                        ...e,
+                        target: {
+                          ...e.target,
+                          value: Number(e.target.value)
+                        }
+                      } as any)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_phone">Contact Phone</Label>
+                    <Input
+                      id="contact_phone"
+                      type="tel"
+                      placeholder="Enter contact phone"
+                      value={businessData.contact_phone}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      placeholder="Enter contact email"
+                      value={businessData.contact_email}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Business Address</Label>
+                    <Textarea
+                      id="address"
+                      placeholder="Enter business address"
+                      value={businessData.address}
+                      onChange={handleBusinessInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Turf Information */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Turf Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Turf Name</Label>
                     <Input
                       id="name"
-                      placeholder="Elite Sports Arena"
+                      type="text"
+                      placeholder="Enter turf name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={handleInputChange}
                       required
                     />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="area">Area/Location *</Label>
+                    <Label htmlFor="area">Area</Label>
                     <Input
                       id="area"
-                      placeholder="Bandra West, Mumbai"
+                      type="text"
+                      placeholder="Enter area"
                       value={formData.area}
-                      onChange={(e) => handleInputChange('area', e.target.value)}
+                      onChange={handleInputChange}
                       required
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Complete Address *</Label>
-                  <Textarea
-                    id="address"
-                    placeholder="Complete address with landmarks"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Describe your turf facilities and unique features"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="surfaceType">Surface Type</Label>
-                    <Select value={formData.surfaceType} onValueChange={(value) => handleInputChange('surfaceType', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select surface" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SURFACE_TYPES.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      placeholder="Enter address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity (Players)</Label>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Enter description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_phone">Contact Phone</Label>
+                    <Input
+                      id="contact_phone"
+                      type="tel"
+                      placeholder="Enter contact phone"
+                      value={formData.contact_phone}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      placeholder="Enter contact email"
+                      value={formData.contact_email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="base_price_per_hour">Base Price per Hour</Label>
+                    <Input
+                      id="base_price_per_hour"
+                      type="number"
+                      placeholder="Enter base price per hour"
+                      value={formData.base_price_per_hour}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="capacity">Capacity</Label>
                     <Input
                       id="capacity"
                       type="number"
-                      placeholder="22"
+                      placeholder="Enter capacity"
                       value={formData.capacity}
-                      onChange={(e) => handleInputChange('capacity', e.target.value)}
+                      onChange={handleInputChange}
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="contactPhone">Contact Phone</Label>
-                    <Input
-                      id="contactPhone"
-                      placeholder="+91 98765 43210"
-                      value={formData.contactPhone}
-                      onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                    />
+                    <Label htmlFor="surface_type">Surface Type</Label>
+                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, surface_type: value }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select surface type" defaultValue={formData.surface_type} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="grass">Grass</SelectItem>
+                        <SelectItem value="artificial_turf">Artificial Turf</SelectItem>
+                        <SelectItem value="clay">Clay</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-              </div>
-
-              {/* Sports & Amenities */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Supported Sports</h3>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                  {SPORTS_OPTIONS.map(sport => (
-                    <div key={sport} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={sport}
-                        checked={formData.supportedSports.includes(sport)}
-                        onCheckedChange={(checked) => handleSportsChange(sport, checked as boolean)}
-                      />
-                      <Label htmlFor={sport} className="text-sm">{sport}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Amenities</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {AMENITIES_OPTIONS.map(amenity => (
-                    <div key={amenity} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={amenity}
-                        checked={formData.amenities.includes(amenity)}
-                        onCheckedChange={(checked) => handleAmenitiesChange(amenity, checked as boolean)}
-                      />
-                      <Label htmlFor={amenity} className="text-sm">{amenity}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Images */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Camera className="w-5 h-5 mr-2" />
-                  Images (Max 5)
-                </h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <Button type="button" variant="outline" asChild>
-                      <label className="cursor-pointer">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Images
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      {images.length}/5 images uploaded
-                    </span>
-                  </div>
-
-                  {images.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative">
-                          <img
-                            src={URL.createObjectURL(image)}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                          <div className="absolute top-2 right-2 flex space-x-1">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={coverImageIndex === index ? "default" : "outline"}
-                              onClick={() => setCoverImageIndex(index)}
-                              className="text-xs px-2 py-1 h-auto"
-                            >
-                              Cover
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => removeImage(index)}
-                              className="p-1 h-auto"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Pricing */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Pricing Configuration</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="basePricePerHour">Base Price per Hour (₹) *</Label>
+                    <Label htmlFor="weekend_premium_percentage">Weekend Premium (%)</Label>
                     <Input
-                      id="basePricePerHour"
+                      id="weekend_premium_percentage"
                       type="number"
-                      step="0.01"
-                      placeholder="1000.00"
-                      value={formData.basePricePerHour}
-                      onChange={(e) => handleInputChange('basePricePerHour', e.target.value)}
-                      required
+                      placeholder="Enter weekend premium percentage"
+                      value={formData.weekend_premium_percentage}
+                      onChange={handleInputChange}
                     />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="weekendPremiumPercentage">Weekend Premium (%)</Label>
+                    <Label htmlFor="peak_hours_premium_percentage">Peak Hours Premium (%)</Label>
                     <Input
-                      id="weekendPremiumPercentage"
+                      id="peak_hours_premium_percentage"
                       type="number"
-                      step="0.01"
-                      placeholder="20.00"
-                      value={formData.weekendPremiumPercentage}
-                      onChange={(e) => handleInputChange('weekendPremiumPercentage', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="peakHoursPremiumPercentage">Peak Hours Premium (%)</Label>
-                    <Input
-                      id="peakHoursPremiumPercentage"
-                      type="number"
-                      step="0.01"
-                      placeholder="25.00"
-                      value={formData.peakHoursPremiumPercentage}
-                      onChange={(e) => handleInputChange('peakHoursPremiumPercentage', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="peakHoursStart">Peak Hours Start</Label>
-                    <Input
-                      id="peakHoursStart"
-                      type="time"
-                      value={formData.peakHoursStart}
-                      onChange={(e) => handleInputChange('peakHoursStart', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="peakHoursEnd">Peak Hours End</Label>
-                    <Input
-                      id="peakHoursEnd"
-                      type="time"
-                      value={formData.peakHoursEnd}
-                      onChange={(e) => handleInputChange('peakHoursEnd', e.target.value)}
+                      placeholder="Enter peak hours premium percentage"
+                      value={formData.peak_hours_premium_percentage}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Submit */}
-              <div className="flex gap-4 pt-6 border-t">
-                <Button type="button" variant="outline" onClick={onBack} className="flex-1">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-                <Button type="submit" disabled={isLoading} className="flex-1">
-                  {isLoading ? 'Adding Turf...' : 'Add Turf'}
-                </Button>
+              {/* Sports and Amenities */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Supported Sports</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="cricket" className="flex items-center space-x-2">
+                      <Checkbox id="cricket" value="cricket" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'cricket', checked } } as any, 'sports')} />
+                      <span>Cricket</span>
+                    </Label>
+                    <Label htmlFor="football" className="flex items-center space-x-2">
+                      <Checkbox id="football" value="football" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'football', checked } } as any, 'sports')} />
+                      <span>Football</span>
+                    </Label>
+                    <Label htmlFor="badminton" className="flex items-center space-x-2">
+                      <Checkbox id="badminton" value="badminton" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'badminton', checked } } as any, 'sports')} />
+                      <span>Badminton</span>
+                    </Label>
+                    <Label htmlFor="tennis" className="flex items-center space-x-2">
+                      <Checkbox id="tennis" value="tennis" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'tennis', checked } } as any, 'sports')} />
+                      <span>Tennis</span>
+                    </Label>
+                    <Label htmlFor="basketball" className="flex items-center space-x-2">
+                      <Checkbox id="basketball" value="basketball" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'basketball', checked } } as any, 'sports')} />
+                      <span>Basketball</span>
+                    </Label>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="parking" className="flex items-center space-x-2">
+                      <Checkbox id="parking" value="parking" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'parking', checked } } as any, 'amenities')} />
+                      <span>Parking</span>
+                    </Label>
+                    <Label htmlFor="washrooms" className="flex items-center space-x-2">
+                      <Checkbox id="washrooms" value="washrooms" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'washrooms', checked } } as any, 'amenities')} />
+                      <span>Washrooms</span>
+                    </Label>
+                    <Label htmlFor="changing_rooms" className="flex items-center space-x-2">
+                      <Checkbox id="changing_rooms" value="changing_rooms" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'changing_rooms', checked } } as any, 'amenities')} />
+                      <span>Changing Rooms</span>
+                    </Label>
+                    <Label htmlFor="flood_lights" className="flex items-center space-x-2">
+                      <Checkbox id="flood_lights" value="flood_lights" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'flood_lights', checked } } as any, 'amenities')} />
+                      <span>Flood Lights</span>
+                    </Label>
+                    <Label htmlFor="refreshments" className="flex items-center space-x-2">
+                      <Checkbox id="refreshments" value="refreshments" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'refreshments', checked } } as any, 'amenities')} />
+                      <span>Refreshments</span>
+                    </Label>
+                  </div>
+                </div>
               </div>
+
+              <Button
+                type="submit"
+                className="w-full cricket-gradient text-white hover:opacity-90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Submit Turf
+                  </>
+                )}
+              </Button>
             </form>
           </CardContent>
         </Card>

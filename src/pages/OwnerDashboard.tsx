@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus, MapPin, Users, BarChart2 } from 'lucide-react';
+import { Building2, Calendar, DollarSign, Star, Settings, LogOut, Plus, MapPin, Users, BarChart2, Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -167,7 +166,7 @@ const OwnerDashboard = () => {
             <Building2 className="w-16 h-16 text-primary mx-auto mb-6" />
             <h2 className="text-2xl font-bold mb-4">Welcome to Turf Owner Dashboard!</h2>
             <p className="text-muted-foreground mb-6">
-              Are you a turf owner looking to register your turf and start managing bookings?
+              Ready to register your turf? Your submission will be reviewed and you'll be notified once approved.
             </p>
             <div className="space-y-3">
               <Button 
@@ -186,7 +185,7 @@ const OwnerDashboard = () => {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              By registering, you'll receive a confirmation email for verification.
+              Your turf will be reviewed by our admin team before going live.
             </p>
           </CardContent>
         </Card>
@@ -207,6 +206,65 @@ const OwnerDashboard = () => {
             <Button onClick={handleOwnerRegistrationStart} className="w-full">
               Register as Turf Owner
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show pending approval message if owner is not verified
+  if (ownerData.verification_status === 'pending') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold mb-4">Approval Pending</h2>
+            <p className="text-muted-foreground mb-6">
+              Your turf submission is under review. We'll notify you once it's approved and your dashboard will be activated.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>What's next?</strong><br/>
+                Our team is reviewing your submission. This usually takes 1-2 business days.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => navigate('/')}>
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show rejection message if owner was rejected
+  if (ownerData.verification_status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <X className="w-16 h-16 text-red-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold mb-4">Application Rejected</h2>
+            <p className="text-muted-foreground mb-6">
+              Unfortunately, your turf application was not approved.
+            </p>
+            {ownerData.rejection_reason && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-red-800">
+                  <strong>Reason:</strong><br/>
+                  {ownerData.rejection_reason}
+                </p>
+              </div>
+            )}
+            <div className="space-y-3">
+              <Button onClick={handleOwnerRegistrationStart} className="w-full">
+                Submit New Application
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                Back to Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
