@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MapPin, Users, DollarSign, Star, Search } from 'lucide-react';
 import { useTurfs } from '@/hooks/useTurfs';
 import { useTurfReviews } from '@/hooks/useReviews';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface TurfCardProps {
   turf: any;
@@ -16,10 +18,26 @@ interface TurfCardProps {
 
 const TurfCard = ({ turf, onBook }: TurfCardProps) => {
   const { data: reviews = [] } = useTurfReviews(turf.id);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   
   const averageRating = reviews.length > 0 
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
+
+  const handleBookClick = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to book a turf.",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    onBook(turf);
+  };
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -85,7 +103,7 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
 
           <Button 
             className="w-full" 
-            onClick={() => onBook(turf)}
+            onClick={handleBookClick}
           >
             Book Now
           </Button>

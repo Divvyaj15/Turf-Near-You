@@ -15,10 +15,40 @@ import {
   UserPlus,
   Zap
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedSport, setSelectedSport] = useState<'cricket' | 'football' | 'pickleball'>('cricket');
+
+  const handleBookTurf = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to book a turf.",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    navigate('/customer-dashboard');
+  };
+
+  const handleFindPlayers = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required", 
+        description: "Please sign in to find players.",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    navigate('/find-players');
+  };
 
   const sports = [
     { 
@@ -52,25 +82,25 @@ const Index = () => {
       icon: Search,
       title: "Find Players",
       description: "Discover players in your area with advanced filtering",
-      action: () => navigate('/find-players')
+      action: handleFindPlayers
     },
     {
       icon: Calendar,
       title: "Book Turfs",
       description: "Reserve premium sports facilities",
-      action: () => navigate('/customer-dashboard')
+      action: handleBookTurf
     },
     {
       icon: Users,
       title: "Join Games",
       description: "Connect with local sports communities",
-      action: () => navigate('/find-players')
+      action: handleFindPlayers
     },
     {
       icon: Trophy,
       title: "Track Progress",
       description: "Monitor your sports journey and achievements",
-      action: () => navigate('/customer-dashboard')
+      action: handleBookTurf
     }
   ];
 
@@ -91,7 +121,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="cricket-gradient text-white px-8 py-4 text-lg"
-              onClick={() => navigate('/find-players')}
+              onClick={handleFindPlayers}
             >
               <Users className="w-5 h-5 mr-2" />
               Find Players Now
@@ -100,7 +130,7 @@ const Index = () => {
               size="lg" 
               variant="outline" 
               className="px-8 py-4 text-lg"
-              onClick={() => navigate('/customer-dashboard')}
+              onClick={handleBookTurf}
             >
               <Calendar className="w-5 h-5 mr-2" />
               Book a Turf
@@ -161,7 +191,7 @@ const Index = () => {
                       className="w-full mt-4"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate('/find-players');
+                        handleFindPlayers();
                       }}
                     >
                       <Search className="w-4 h-4 mr-2" />
@@ -200,7 +230,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="secondary"
-                onClick={() => navigate('/find-players')}
+                onClick={handleFindPlayers}
                 className="bg-white text-gray-900 hover:bg-gray-100"
               >
                 <UserPlus className="w-5 h-5 mr-2" />
