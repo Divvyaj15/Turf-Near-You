@@ -1,176 +1,177 @@
+
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Building2, MapPin, DollarSign, Clock, Users, Check, X } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArrowLeft, Building2, MapPin, Phone, Mail, Users, Clock, IndianRupee } from 'lucide-react';
+
+const turfSchema = z.object({
+  name: z.string().min(2, 'Turf name must be at least 2 characters'),
+  area: z.string().min(1, 'Area is required'),
+  address: z.string().min(10, 'Please provide a complete address'),
+  description: z.string().optional(),
+  capacity: z.number().min(1, 'Capacity must be at least 1'),
+  basePrice: z.number().min(1, 'Base price must be greater than 0'),
+  contactPhone: z.string().min(10, 'Please provide a valid phone number'),
+  contactEmail: z.string().email('Please provide a valid email address'),
+  surfaceType: z.string().min(1, 'Surface type is required'),
+  supportedSports: z.array(z.string()).min(1, 'Select at least one sport'),
+  amenities: z.array(z.string()),
+  peakHoursStart: z.string(),
+  peakHoursEnd: z.string(),
+  weekendPremium: z.number().min(0, 'Weekend premium cannot be negative'),
+  peakHoursPremium: z.number().min(0, 'Peak hours premium cannot be negative'),
+});
+
+type TurfFormData = z.infer<typeof turfSchema>;
 
 interface AddTurfFormProps {
   onBack: () => void;
   onSuccess: () => void;
 }
 
+const SPORTS_OPTIONS = [
+  'Cricket', 'Football', 'Tennis', 'Badminton', 'Basketball', 
+  'Volleyball', 'Hockey', 'Rugby', 'Baseball', 'Softball'
+];
+
+const AMENITIES_OPTIONS = [
+  'Parking', 'Restrooms', 'Changing Rooms', 'Showers', 'Lighting',
+  'Seating Area', 'Cafeteria', 'Equipment Rental', 'First Aid',
+  'WiFi', 'Air Conditioning', 'Water Fountain'
+];
+
+const SURFACE_TYPES = [
+  'Natural Grass', 'Artificial Turf', 'Clay', 'Concrete', 'Rubber',
+  'Synthetic', 'Astro Turf', 'Indoor Court', 'Wooden Floor'
+];
+
 const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    area: '',
-    address: '',
-    description: '',
-    contact_phone: '',
-    contact_email: '',
-    base_price_per_hour: '',
-    capacity: '',
-    surface_type: 'grass',
-    weekend_premium_percentage: '0',
-    peak_hours_premium_percentage: '0',
+  const form = useForm<TurfFormData>({
+    resolver: zodResolver(turfSchema),
+    defaultValues: {
+      name: '',
+      area: '',
+      address: '',
+      description: '',
+      capacity: 10,
+      basePrice: 500,
+      contactPhone: '',
+      contactEmail: '',
+      surfaceType: '',
+      supportedSports: [],
+      amenities: [],
+      peakHoursStart: '18:00',
+      peakHoursEnd: '22:00',
+      weekendPremium: 0,
+      peakHoursPremium: 0,
+    },
   });
 
-  const [businessData, setBusinessData] = useState({
-    business_name: '',
-    owner_name: '',
-    business_type: '',
-    contact_phone: '',
-    contact_email: '',
-    address: '',
-    years_of_operation: 0,
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleBusinessInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setBusinessData(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'sports' | 'amenities') => {
-    const { value, checked } = e.target;
-    
-    if (type === 'sports') {
-      setSelectedSports(prev =>
-        checked ? [...prev, value] : prev.filter(item => item !== value)
-      );
-    } else {
-      setSelectedAmenities(prev =>
-        checked ? [...prev, value] : prev.filter(item => item !== value)
-      );
+  const onSubmit = async (data: TurfFormData) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to submit a turf",
+        variant: "destructive"
+      });
+      return;
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      // Get owner data first
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('turf_owners')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-      // Validate required fields
-      if (!formData.name || !formData.area || !formData.address || !formData.base_price_per_hour) {
+      if (ownerError || !ownerData) {
         toast({
           title: "Error",
-          description: "Please fill in all required fields",
+          description: "Owner information not found. Please complete your registration first.",
           variant: "destructive"
         });
         return;
       }
 
-      // First, create or update turf owner record
-      const ownerData = {
-        user_id: user.id,
-        business_name: businessData.business_name,
-        owner_name: businessData.owner_name,
-        business_type: businessData.business_type,
-        contact_phone: businessData.contact_phone,
-        contact_email: businessData.contact_email,
-        address: businessData.address,
-        years_of_operation: businessData.years_of_operation,
-        verification_status: 'pending'
-      };
-
-      const { data: ownerResult, error: ownerError } = await supabase
-        .from('turf_owners')
-        .upsert(ownerData, { 
-          onConflict: 'user_id',
-          ignoreDuplicates: false 
-        })
-        .select()
-        .single();
-
-      if (ownerError) {
-        console.error('Owner creation error:', ownerError);
-        throw new Error('Failed to create owner profile');
-      }
-
-      // Create turf record with pending status
+      // Insert turf data with pending status
       const turfData = {
-        ...formData,
-        owner_id: ownerResult.id,
-        status: 'pending', // Set to pending instead of active
-        supported_sports: selectedSports,
-        amenities: selectedAmenities,
-        base_price_per_hour: Number(formData.base_price_per_hour),
-        capacity: Number(formData.capacity),
-        weekend_premium_percentage: Number(formData.weekend_premium_percentage),
-        peak_hours_premium_percentage: Number(formData.peak_hours_premium_percentage)
+        name: data.name,
+        area: data.area,
+        address: data.address,
+        description: data.description,
+        capacity: data.capacity,
+        base_price_per_hour: data.basePrice,
+        contact_phone: data.contactPhone,
+        contact_email: data.contactEmail,
+        surface_type: data.surfaceType,
+        supported_sports: data.supportedSports,
+        amenities: data.amenities,
+        peak_hours_start: data.peakHoursStart,
+        peak_hours_end: data.peakHoursEnd,
+        weekend_premium_percentage: data.weekendPremium,
+        peak_hours_premium_percentage: data.peakHoursPremium,
+        owner_id: ownerData.id,
+        status: 'pending', // Set status to pending for admin approval
       };
 
-      const { data: turfResult, error: turfError } = await supabase
+      const { data: insertedTurf, error: turfError } = await supabase
         .from('turfs')
         .insert(turfData)
         .select()
         .single();
 
       if (turfError) {
-        console.error('Turf creation error:', turfError);
-        throw new Error('Failed to create turf');
+        console.error('Error inserting turf:', turfError);
+        toast({
+          title: "Error",
+          description: "Failed to submit turf. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
 
-      // Send approval email
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-turf-approval-email', {
-          body: {
-            turfData: turfResult,
-            ownerData: ownerResult
-          }
-        });
-
-        if (emailError) {
-          console.error('Email sending error:', emailError);
-          // Don't throw error here as turf was created successfully
+      // Send approval email to admin
+      const { error: emailError } = await supabase.functions.invoke('send-turf-approval-email', {
+        body: {
+          turfData: insertedTurf,
+          ownerData: ownerData
         }
-      } catch (emailError) {
-        console.error('Email function error:', emailError);
-        // Continue as turf was created successfully
+      });
+
+      if (emailError) {
+        console.error('Error sending approval email:', emailError);
+        // Don't show error to user as turf was still created successfully
       }
 
       toast({
-        title: "Turf Submitted Successfully!",
-        description: "Your turf has been submitted for approval. You'll be notified once it's reviewed.",
+        title: "Turf Submitted Successfully! 🎉",
+        description: "Your turf has been submitted for admin approval. You'll be notified once it's reviewed.",
       });
 
       onSuccess();
     } catch (error: any) {
-      console.error('Submission error:', error);
+      console.error('Error in turf submission:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit turf. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -179,319 +180,357 @@ const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="container mx-auto px-4">
-        <Button variant="ghost" onClick={onBack} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+        <CardTitle className="flex items-center text-2xl">
+          <Building2 className="w-6 h-6 mr-2" />
+          Register Your Turf
+        </CardTitle>
+        <p className="text-muted-foreground">
+          Fill out the details below to register your turf. It will be reviewed by our team before going live.
+        </p>
+      </CardHeader>
 
-        <Card className="shadow-2xl">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-10 h-10 cricket-gradient rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">TC</span>
-              </div>
-              <span className="text-2xl font-bold text-primary">Add New Turf</span>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Turf Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter turf name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="area"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Area/Location *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Bandra West, Mumbai" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <CardTitle className="text-2xl">List Your Turf</CardTitle>
-            <p className="text-muted-foreground">
-              Provide details about your turf to get started
-            </p>
-          </CardHeader>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Business Information */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Business Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="business_name">Business Name</Label>
-                    <Input
-                      id="business_name"
-                      type="text"
-                      placeholder="Enter business name"
-                      value={businessData.business_name}
-                      onChange={handleBusinessInputChange}
-                      required
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    Complete Address *
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter complete address with landmarks"
+                      className="min-h-[80px]"
+                      {...field} 
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="owner_name">Owner Name</Label>
-                    <Input
-                      id="owner_name"
-                      type="text"
-                      placeholder="Enter owner name"
-                      value={businessData.owner_name}
-                      onChange={handleBusinessInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="business_type">Business Type</Label>
-                    <Input
-                      id="business_type"
-                      type="text"
-                      placeholder="Enter business type"
-                      value={businessData.business_type}
-                      onChange={handleBusinessInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="years_of_operation">Years of Operation</Label>
-                    <Input
-                      id="years_of_operation"
-                      type="number"
-                      placeholder="Enter years of operation"
-                      value={businessData.years_of_operation}
-                      onChange={(e) => handleBusinessInputChange({
-                        ...e,
-                        target: {
-                          ...e.target,
-                          value: Number(e.target.value)
-                        }
-                      } as any)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_phone">Contact Phone</Label>
-                    <Input
-                      id="contact_phone"
-                      type="tel"
-                      placeholder="Enter contact phone"
-                      value={businessData.contact_phone}
-                      onChange={handleBusinessInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email</Label>
-                    <Input
-                      id="contact_email"
-                      type="email"
-                      placeholder="Enter contact email"
-                      value={businessData.contact_email}
-                      onChange={handleBusinessInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Business Address</Label>
-                    <Textarea
-                      id="address"
-                      placeholder="Enter business address"
-                      value={businessData.address}
-                      onChange={handleBusinessInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Turf Information */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Turf Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Turf Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Enter turf name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe your turf, facilities, and any special features"
+                      className="min-h-[100px]"
+                      {...field} 
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="area">Area</Label>
-                    <Input
-                      id="area"
-                      type="text"
-                      placeholder="Enter area"
-                      value={formData.area}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Textarea
-                      id="address"
-                      placeholder="Enter address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_phone">Contact Phone</Label>
-                    <Input
-                      id="contact_phone"
-                      type="tel"
-                      placeholder="Enter contact phone"
-                      value={formData.contact_phone}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email</Label>
-                    <Input
-                      id="contact_email"
-                      type="email"
-                      placeholder="Enter contact email"
-                      value={formData.contact_email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="base_price_per_hour">Base Price per Hour</Label>
-                    <Input
-                      id="base_price_per_hour"
-                      type="number"
-                      placeholder="Enter base price per hour"
-                      value={formData.base_price_per_hour}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      placeholder="Enter capacity"
-                      value={formData.capacity}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="surface_type">Surface Type</Label>
-                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, surface_type: value }))}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select surface type" defaultValue={formData.surface_type} />
-                      </SelectTrigger>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Capacity and Pricing */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Users className="w-4 h-4 mr-1" />
+                      Capacity *
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Max players"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="basePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <IndianRupee className="w-4 h-4 mr-1" />
+                      Base Price/Hour *
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="₹500"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="surfaceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Surface Type *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select surface" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="grass">Grass</SelectItem>
-                        <SelectItem value="artificial_turf">Artificial Turf</SelectItem>
-                        <SelectItem value="clay">Clay</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {SURFACE_TYPES.map((surface) => (
+                          <SelectItem key={surface} value={surface}>
+                            {surface}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weekend_premium_percentage">Weekend Premium (%)</Label>
-                    <Input
-                      id="weekend_premium_percentage"
-                      type="number"
-                      placeholder="Enter weekend premium percentage"
-                      value={formData.weekend_premium_percentage}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="peak_hours_premium_percentage">Peak Hours Premium (%)</Label>
-                    <Input
-                      id="peak_hours_premium_percentage"
-                      type="number"
-                      placeholder="Enter peak hours premium percentage"
-                      value={formData.peak_hours_premium_percentage}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sports and Amenities */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Supported Sports</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="cricket" className="flex items-center space-x-2">
-                      <Checkbox id="cricket" value="cricket" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'cricket', checked } } as any, 'sports')} />
-                      <span>Cricket</span>
-                    </Label>
-                    <Label htmlFor="football" className="flex items-center space-x-2">
-                      <Checkbox id="football" value="football" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'football', checked } } as any, 'sports')} />
-                      <span>Football</span>
-                    </Label>
-                    <Label htmlFor="badminton" className="flex items-center space-x-2">
-                      <Checkbox id="badminton" value="badminton" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'badminton', checked } } as any, 'sports')} />
-                      <span>Badminton</span>
-                    </Label>
-                    <Label htmlFor="tennis" className="flex items-center space-x-2">
-                      <Checkbox id="tennis" value="tennis" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'tennis', checked } } as any, 'sports')} />
-                      <span>Tennis</span>
-                    </Label>
-                    <Label htmlFor="basketball" className="flex items-center space-x-2">
-                      <Checkbox id="basketball" value="basketball" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'basketball', checked } } as any, 'sports')} />
-                      <span>Basketball</span>
-                    </Label>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Amenities</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="parking" className="flex items-center space-x-2">
-                      <Checkbox id="parking" value="parking" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'parking', checked } } as any, 'amenities')} />
-                      <span>Parking</span>
-                    </Label>
-                    <Label htmlFor="washrooms" className="flex items-center space-x-2">
-                      <Checkbox id="washrooms" value="washrooms" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'washrooms', checked } } as any, 'amenities')} />
-                      <span>Washrooms</span>
-                    </Label>
-                    <Label htmlFor="changing_rooms" className="flex items-center space-x-2">
-                      <Checkbox id="changing_rooms" value="changing_rooms" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'changing_rooms', checked } } as any, 'amenities')} />
-                      <span>Changing Rooms</span>
-                    </Label>
-                    <Label htmlFor="flood_lights" className="flex items-center space-x-2">
-                      <Checkbox id="flood_lights" value="flood_lights" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'flood_lights', checked } } as any, 'amenities')} />
-                      <span>Flood Lights</span>
-                    </Label>
-                    <Label htmlFor="refreshments" className="flex items-center space-x-2">
-                      <Checkbox id="refreshments" value="refreshments" onCheckedChange={(checked) => handleCheckboxChange({ target: { value: 'refreshments', checked } } as any, 'amenities')} />
-                      <span>Refreshments</span>
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full cricket-gradient text-white hover:opacity-90"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Submit Turf
-                  </>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="contactPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Phone className="w-4 h-4 mr-1" />
+                      Contact Phone *
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="+91 98765 43210" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contactEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Mail className="w-4 h-4 mr-1" />
+                      Contact Email *
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="contact@yourturf.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Supported Sports */}
+            <FormField
+              control={form.control}
+              name="supportedSports"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supported Sports * (Select at least one)</FormLabel>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    {SPORTS_OPTIONS.map((sport) => (
+                      <div key={sport} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={sport}
+                          checked={field.value?.includes(sport)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, sport]);
+                            } else {
+                              field.onChange(field.value?.filter((s) => s !== sport));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={sport} className="text-sm">
+                          {sport}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Amenities */}
+            <FormField
+              control={form.control}
+              name="amenities"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amenities (Optional)</FormLabel>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {AMENITIES_OPTIONS.map((amenity) => (
+                      <div key={amenity} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={amenity}
+                          checked={field.value?.includes(amenity)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, amenity]);
+                            } else {
+                              field.onChange(field.value?.filter((a) => a !== amenity));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={amenity} className="text-sm">
+                          {amenity}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Operating Hours and Pricing */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="peakHoursStart"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      Peak Hours Start
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="peakHoursEnd"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Peak Hours End</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="peakHoursPremium"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Peak Hours Premium (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="20"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="weekendPremium"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Weekend Premium (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="30"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-6">
+              <Button type="button" variant="outline" onClick={onBack}>
+                Cancel
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="cricket-gradient text-white"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit for Review'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
