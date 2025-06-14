@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -52,15 +52,21 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                <Link to="/find-players" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Find Players
-                </Link>
-                <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Owner Dashboard
-                </Link>
-                <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                  Customer Dashboard
-                </Link>
+                {userRole === 'customer' && (
+                  <>
+                    <Link to="/find-players" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                      Find Players
+                    </Link>
+                    <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                      Customer Dashboard
+                    </Link>
+                  </>
+                )}
+                {userRole === 'turf_owner' && (
+                  <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                    Owner Dashboard
+                  </Link>
+                )}
                 <Link to="/my-profile" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   My Profile
                 </Link>
