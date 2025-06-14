@@ -149,7 +149,7 @@ export const useAuthSubmit = () => {
     phoneNumber: string,
     selectedRole: 'customer' | 'turf_owner' | null,
     setIsLoading: (loading: boolean) => void,
-    setStep: (step: 'auth' | 'role' | 'owner-details' | 'complete') => void,
+    setStep: (step: 'auth' | 'role' | 'owner-details' | 'complete' | 'otp') => void,
     setTempUserData: (data: any) => void,
     validateSignUpFields: (fullName: string, phoneNumber: string) => boolean
   ) => {
@@ -178,17 +178,37 @@ export const useAuthSubmit = () => {
           return;
         }
         
-        // For customer, proceed with normal signup
-        result = await signUp(email, password, fullName, selectedRole, phoneNumber);
+        // For customer, proceed with normal signup using OTP
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              full_name: fullName,
+              role: selectedRole,
+              phone_number: phoneNumber
+            }
+          }
+        });
         
-        if (!result.error) {
+        if (error) {
           toast({
-            title: "Account Created Successfully! 🎉",
-            description: "Please check your email for verification, then verify your phone number.",
+            title: "Registration Failed",
+            description: error.message,
+            variant: "destructive"
           });
-          // Redirect to email verification page with email parameter
-          navigate(`/email-verification?email=${encodeURIComponent(email)}`);
+          setIsLoading(false);
+          return;
         }
+
+        toast({
+          title: "Account Created! 📧",
+          description: "Please check your email for the verification code.",
+        });
+        
+        // Redirect to email verification page with email parameter
+        navigate(`/email-verification?email=${encodeURIComponent(email)}`);
       } else {
         console.log('Attempting sign in with:', email);
         result = await signIn(email, password);

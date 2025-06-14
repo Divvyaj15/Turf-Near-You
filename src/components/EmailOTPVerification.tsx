@@ -6,6 +6,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface EmailOTPVerificationProps {
   email: string;
@@ -24,6 +25,7 @@ const EmailOTPVerification: React.FC<EmailOTPVerificationProps> = ({
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -66,10 +68,12 @@ const EmailOTPVerification: React.FC<EmailOTPVerificationProps> = ({
         });
       } else {
         toast({
-          title: "Email Verified!",
+          title: "Email Verified! 🎉",
           description: "Your email has been successfully verified.",
         });
-        onVerificationComplete();
+        
+        // Redirect to phone verification
+        navigate('/phone-verification');
       }
     } catch (error: any) {
       toast({
