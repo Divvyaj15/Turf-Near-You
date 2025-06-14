@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -79,6 +78,12 @@ export const useAuthFlow = () => {
     }
   }, [user, userRole, navigate]);
 
+  const validatePhoneNumber = (phone: string): boolean => {
+    // Basic phone validation - adjust regex as needed
+    const phoneRegex = /^[+]?[\d\s-()]{10,15}$/;
+    return phoneRegex.test(phone.trim());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -86,9 +91,10 @@ export const useAuthFlow = () => {
     try {
       let result;
       if (isSignUp) {
+        // Validate required fields
         if (!fullName.trim()) {
           toast({
-            title: "Error",
+            title: "Missing Information",
             description: "Please enter your full name",
             variant: "destructive"
           });
@@ -98,8 +104,18 @@ export const useAuthFlow = () => {
 
         if (!phoneNumber.trim()) {
           toast({
-            title: "Error",
-            description: "Please enter your phone number",
+            title: "Missing Information",
+            description: "Please enter your phone number for verification",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        if (!validatePhoneNumber(phoneNumber)) {
+          toast({
+            title: "Invalid Phone Number",
+            description: "Please enter a valid phone number",
             variant: "destructive"
           });
           setIsLoading(false);
@@ -125,8 +141,8 @@ export const useAuthFlow = () => {
         
         if (!result.error) {
           toast({
-            title: "Account Created!",
-            description: "Please check your email for the verification code.",
+            title: "Account Created Successfully! 🎉",
+            description: "Please check your email for verification, then verify your phone number.",
           });
           // Redirect to email verification page with email parameter
           navigate(`/email-verification?email=${encodeURIComponent(email)}`);
@@ -137,17 +153,28 @@ export const useAuthFlow = () => {
         
         if (!result.error) {
           toast({
-            title: "Success",
-            description: "Logged in successfully!",
+            title: "Welcome Back! 👋",
+            description: "Successfully logged in to your account",
           });
         }
       }
 
       if (result.error) {
         console.error('Auth error:', result.error);
+        let errorMessage = result.error.message;
+        
+        // Provide user-friendly error messages
+        if (errorMessage.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials.';
+        } else if (errorMessage.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email address before signing in.';
+        } else if (errorMessage.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please sign in instead.';
+        }
+        
         toast({
-          title: "Error",
-          description: result.error.message,
+          title: "Authentication Error",
+          description: errorMessage,
           variant: "destructive"
         });
       }
@@ -155,7 +182,7 @@ export const useAuthFlow = () => {
       console.error('Unexpected auth error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -168,6 +195,16 @@ export const useAuthFlow = () => {
     setIsLoading(true);
 
     try {
+      if (!validatePhoneNumber(phoneNumber)) {
+        toast({
+          title: "Invalid Phone Number",
+          description: "Please enter a valid phone number",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Find user by phone number first
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
@@ -177,8 +214,8 @@ export const useAuthFlow = () => {
 
       if (profileError || !profile) {
         toast({
-          title: "Error",
-          description: "No account found with this phone number",
+          title: "Account Not Found",
+          description: "No verified account found with this phone number",
           variant: "destructive"
         });
         setIsLoading(false);
@@ -187,8 +224,8 @@ export const useAuthFlow = () => {
 
       if (!profile.phone_verified) {
         toast({
-          title: "Error",
-          description: "Phone number not verified. Please complete verification first.",
+          title: "Phone Not Verified",
+          description: "Please complete phone verification first or sign in with email.",
           variant: "destructive"
         });
         setIsLoading(false);
@@ -205,7 +242,7 @@ export const useAuthFlow = () => {
       if (userError || !userProfile) {
         toast({
           title: "Error",
-          description: "Unable to find user account",
+          description: "Unable to find user account details",
           variant: "destructive"
         });
         setIsLoading(false);
@@ -217,12 +254,12 @@ export const useAuthFlow = () => {
       
       if (!result.error) {
         toast({
-          title: "Success",
-          description: "Logged in successfully with phone number!",
+          title: "Success! 📱",
+          description: "Successfully signed in with phone number",
         });
       } else {
         toast({
-          title: "Error",
+          title: "Sign In Failed",
           description: "Invalid phone number or password",
           variant: "destructive"
         });
@@ -231,7 +268,7 @@ export const useAuthFlow = () => {
       console.error('Phone sign in error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred during sign in",
         variant: "destructive"
       });
     } finally {
@@ -266,7 +303,7 @@ export const useAuthFlow = () => {
       
       if (result.error) {
         toast({
-          title: "Error",
+          title: "Registration Failed",
           description: result.error.message,
           variant: "destructive"
         });
@@ -275,8 +312,8 @@ export const useAuthFlow = () => {
 
       setStep('complete');
       toast({
-        title: "Registration Complete!",
-        description: "Your turf owner account has been created and your application submitted for review.",
+        title: "Registration Successful! 🎉",
+        description: "Your turf owner account has been created. Please verify your email to continue.",
       });
       
       setTempUserData(null);
