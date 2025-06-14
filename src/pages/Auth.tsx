@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -358,45 +357,23 @@ const Auth = () => {
           Back to Home
         </Button>
 
-        {step === 'role' ? (
-          <RegistrationSteps
-            step={step}
-            selectedRole={selectedRole}
-            tempUserData={tempUserData}
-            onBackToAuth={handleBackToAuth}
-            onRoleSelect={handleRoleSelect}
-            onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
-          />
-        ) : step === 'owner-details' ? (
-          <RegistrationSteps
-            step={step}
-            selectedRole={selectedRole}
-            tempUserData={tempUserData}
-            onBackToAuth={handleBackToAuth}
-            onRoleSelect={handleRoleSelect}
-            onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
-          />
-        ) : step === 'complete' ? (
-          <CompletionScreen onReturnHome={handleReturnHome} />
-        ) : (
-          <AuthForm
-            isSignUp={isSignUp}
-            email={email}
-            password={password}
-            fullName={fullName}
-            phoneNumber={phoneNumber}
-            selectedRole={selectedRole}
-            isLoading={isLoading}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onFullNameChange={setFullName}
-            onPhoneNumberChange={setPhoneNumber}
-            onSubmit={handleSubmit}
-            onPhoneSignIn={handlePhoneSignIn}
-            onToggleMode={handleToggleMode}
-            onChangeRole={handleChangeRole}
-          />
-        )}
+        <AuthForm
+          isSignUp={isSignUp}
+          email={email}
+          password={password}
+          fullName={fullName}
+          phoneNumber={phoneNumber}
+          selectedRole={selectedRole}
+          isLoading={isLoading}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onFullNameChange={setFullName}
+          onPhoneNumberChange={setPhoneNumber}
+          onSubmit={handleSubmit}
+          onPhoneSignIn={handlePhoneSignIn}
+          onToggleMode={handleToggleMode}
+          onChangeRole={handleChangeRole}
+        />
       </div>
     </div>
   );
