@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import CompletionScreen from '@/components/CompletionScreen';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -296,7 +297,16 @@ const Auth = () => {
   };
 
   const handleToggleMode = () => {
-    setIsSignUp(!isSignUp);
+    const newIsSignUp = !isSignUp;
+    setIsSignUp(newIsSignUp);
+    
+    // Update URL to reflect the mode change
+    if (newIsSignUp) {
+      setSearchParams({ mode: 'register' });
+    } else {
+      setSearchParams({});
+    }
+    
     resetForm();
   };
 
@@ -348,23 +358,45 @@ const Auth = () => {
           Back to Home
         </Button>
 
-        <AuthForm
-          isSignUp={isSignUp}
-          email={email}
-          password={password}
-          fullName={fullName}
-          phoneNumber={phoneNumber}
-          selectedRole={selectedRole}
-          isLoading={isLoading}
-          onEmailChange={setEmail}
-          onPasswordChange={setPassword}
-          onFullNameChange={setFullName}
-          onPhoneNumberChange={setPhoneNumber}
-          onSubmit={handleSubmit}
-          onPhoneSignIn={handlePhoneSignIn}
-          onToggleMode={handleToggleMode}
-          onChangeRole={handleChangeRole}
-        />
+        {step === 'role' ? (
+          <RegistrationSteps
+            step={step}
+            selectedRole={selectedRole}
+            tempUserData={tempUserData}
+            onBackToAuth={handleBackToAuth}
+            onRoleSelect={handleRoleSelect}
+            onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
+          />
+        ) : step === 'owner-details' ? (
+          <RegistrationSteps
+            step={step}
+            selectedRole={selectedRole}
+            tempUserData={tempUserData}
+            onBackToAuth={handleBackToAuth}
+            onRoleSelect={handleRoleSelect}
+            onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
+          />
+        ) : step === 'complete' ? (
+          <CompletionScreen onReturnHome={handleReturnHome} />
+        ) : (
+          <AuthForm
+            isSignUp={isSignUp}
+            email={email}
+            password={password}
+            fullName={fullName}
+            phoneNumber={phoneNumber}
+            selectedRole={selectedRole}
+            isLoading={isLoading}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onFullNameChange={setFullName}
+            onPhoneNumberChange={setPhoneNumber}
+            onSubmit={handleSubmit}
+            onPhoneSignIn={handlePhoneSignIn}
+            onToggleMode={handleToggleMode}
+            onChangeRole={handleChangeRole}
+          />
+        )}
       </div>
     </div>
   );
