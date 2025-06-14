@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -166,6 +165,82 @@ const Auth = () => {
     }
   };
 
+  const handlePhoneSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Find user by phone number first
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, phone_verified')
+        .eq('phone_number', phoneNumber)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        toast({
+          title: "Error",
+          description: "No account found with this phone number",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profile.phone_verified) {
+        toast({
+          title: "Error",
+          description: "Phone number not verified. Please complete verification first.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Get user email from profiles table
+      const { data: userProfile, error: userError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', profile.id)
+        .single();
+
+      if (userError || !userProfile) {
+        toast({
+          title: "Error",
+          description: "Unable to find user account",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign in with email and password
+      const result = await signIn(userProfile.email, password);
+      
+      if (!result.error) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully with phone number!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Invalid phone number or password",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Phone sign in error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -284,6 +359,7 @@ const Auth = () => {
           onFullNameChange={setFullName}
           onPhoneNumberChange={setPhoneNumber}
           onSubmit={handleSubmit}
+          onPhoneSignIn={handlePhoneSignIn}
           onToggleMode={handleToggleMode}
           onChangeRole={handleChangeRole}
         />
