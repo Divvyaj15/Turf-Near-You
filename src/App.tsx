@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import FindPlayers from "./pages/FindPlayers";
 import PlayerProfileSetup from "./pages/PlayerProfileSetup";
 import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
+import PhoneVerificationPage from "./pages/PhoneVerificationPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +30,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/phone-verification" element={<PhoneVerificationPage />} />
                 <Route path="/owner-dashboard" element={<OwnerDashboard />} />
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                 <Route path="/find-players" element={<FindPlayers />} />

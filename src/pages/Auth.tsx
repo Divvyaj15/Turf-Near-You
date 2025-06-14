@@ -33,10 +33,15 @@ const Auth = () => {
         console.log('User authenticated, checking profile...');
         
         try {
-          // Check if user has a profile
+          if (userRole === 'turf_owner') {
+            navigate('/owner-dashboard');
+            return;
+          }
+
+          // For customers, check if they have verified their phone
           const { data: profile, error } = await supabase
             .from('user_profiles')
-            .select('*')
+            .select('phone_verified')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -45,14 +50,28 @@ const Auth = () => {
             return;
           }
 
-          if (userRole === 'turf_owner') {
-            navigate('/owner-dashboard');
-          } else if (profile) {
-            // User has a profile, redirect to find players
-            navigate('/find-players');
+          if (profile?.phone_verified) {
+            // Phone verified, check if they have completed profile setup
+            const { data: fullProfile, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            if (profileError) {
+              console.error('Error checking full profile:', profileError);
+              return;
+            }
+
+            // If they have basic info, go to find players, otherwise profile setup
+            if (fullProfile.age && fullProfile.location) {
+              navigate('/find-players');
+            } else {
+              navigate('/player-profile-setup');
+            }
           } else {
-            // User doesn't have a profile, redirect to profile setup
-            navigate('/player-profile-setup');
+            // Phone not verified, redirect to verification
+            navigate('/phone-verification');
           }
         } catch (error) {
           console.error('Error in profile check:', error);
@@ -108,9 +127,23 @@ const Auth = () => {
         
         // For customer, proceed with normal signup
         result = await signUp(email, password, fullName, selectedRole, phoneNumber);
+        
+        if (!result.error) {
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to verify your account, then you'll be redirected to phone verification.",
+          });
+        }
       } else {
         console.log('Attempting sign in with:', email);
         result = await signIn(email, password);
+        
+        if (!result.error) {
+          toast({
+            title: "Success",
+            description: "Logged in successfully!",
+          });
+        }
       }
 
       if (result.error) {
@@ -120,18 +153,6 @@ const Auth = () => {
           description: result.error.message,
           variant: "destructive"
         });
-      } else {
-        if (isSignUp && selectedRole === 'customer') {
-          toast({
-            title: "Success",
-            description: "Account created successfully! Please check your email to verify your account.",
-          });
-        } else if (!isSignUp) {
-          toast({
-            title: "Success",
-            description: "Logged in successfully!",
-          });
-        }
       }
     } catch (error: any) {
       console.error('Unexpected auth error:', error);

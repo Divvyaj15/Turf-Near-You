@@ -84,7 +84,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
           {isSignUp && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">Full Name *</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -96,7 +96,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Label htmlFor="phoneNumber">Phone Number * <span className="text-xs text-muted-foreground">(Required for verification)</span></Label>
                 <Input
                   id="phoneNumber"
                   type="tel"
@@ -155,7 +155,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
           >
             {isLoading ? 'Loading...' : (
               isSignUp 
-                ? (selectedRole === 'turf_owner' ? 'Continue to Business Details' : 'Create Account')
+                ? (selectedRole === 'turf_owner' ? 'Continue to Business Details' : 'Create Account & Verify Phone')
                 : 'Sign In'
             )}
           </Button>
