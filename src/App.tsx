@@ -14,6 +14,7 @@ import PlayerProfileSetup from "./pages/PlayerProfileSetup";
 import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
 import PhoneVerificationPage from "./pages/PhoneVerificationPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/email-verification" element={<EmailVerificationPage />} />
                 <Route path="/phone-verification" element={<PhoneVerificationPage />} />
                 <Route path="/owner-dashboard" element={<OwnerDashboard />} />
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />

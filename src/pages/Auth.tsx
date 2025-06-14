@@ -130,8 +130,10 @@ const Auth = () => {
         if (!result.error) {
           toast({
             title: "Account Created!",
-            description: "Please check your email to verify your account, then you'll be redirected to phone verification.",
+            description: "Please check your email for the verification code.",
           });
+          // Redirect to email verification page with email parameter
+          navigate(`/email-verification?email=${encodeURIComponent(email)}`);
         }
       } else {
         console.log('Attempting sign in with:', email);
