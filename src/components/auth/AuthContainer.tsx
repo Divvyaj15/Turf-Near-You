@@ -34,10 +34,11 @@ const AuthContainer = () => {
     handleBackToAuth,
     handleReturnHome,
     handleRoleSelect,
-    handleOwnerRegistrationComplete
+    handleOwnerRegistrationComplete,
+    handleOTPAuth
   } = useAuthFlow();
 
-  if (step === 'role' || step === 'owner-details') {
+  if (step === 'role' || step === 'owner-details' || step === 'otp') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
         <AuthStepRenderer
@@ -62,6 +63,7 @@ const AuthContainer = () => {
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
+          onOTPAuth={handleOTPAuth}
         />
       </div>
     );
@@ -92,6 +94,7 @@ const AuthContainer = () => {
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
+          onOTPAuth={handleOTPAuth}
         />
       </div>
     );
@@ -132,6 +135,7 @@ const AuthContainer = () => {
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
+          onOTPAuth={handleOTPAuth}
         />
       </div>
     </div>

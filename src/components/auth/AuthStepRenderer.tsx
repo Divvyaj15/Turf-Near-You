@@ -3,9 +3,10 @@ import React from 'react';
 import AuthForm from '@/components/AuthForm';
 import RegistrationSteps from '@/components/RegistrationSteps';
 import CompletionScreen from '@/components/CompletionScreen';
+import OTPAuth from '@/components/auth/OTPAuth';
 
 interface AuthStepRendererProps {
-  step: 'auth' | 'role' | 'owner-details' | 'complete';
+  step: 'auth' | 'role' | 'owner-details' | 'complete' | 'otp';
   isSignUp: boolean;
   email: string;
   password: string;
@@ -26,6 +27,7 @@ interface AuthStepRendererProps {
   onRoleSelect: (role: 'customer' | 'turf_owner') => void;
   onOwnerRegistrationComplete: (ownerData: any) => void;
   onReturnHome: () => void;
+  onOTPAuth?: () => void;
 }
 
 const AuthStepRenderer: React.FC<AuthStepRendererProps> = ({
@@ -49,7 +51,8 @@ const AuthStepRenderer: React.FC<AuthStepRendererProps> = ({
   onBackToAuth,
   onRoleSelect,
   onOwnerRegistrationComplete,
-  onReturnHome
+  onReturnHome,
+  onOTPAuth
 }) => {
   if (step === 'role' || step === 'owner-details') {
     return (
@@ -66,6 +69,10 @@ const AuthStepRenderer: React.FC<AuthStepRendererProps> = ({
 
   if (step === 'complete') {
     return <CompletionScreen onReturnHome={onReturnHome} />;
+  }
+
+  if (step === 'otp') {
+    return <OTPAuth onBackToAuth={onBackToAuth} />;
   }
 
   return (
@@ -85,6 +92,7 @@ const AuthStepRenderer: React.FC<AuthStepRendererProps> = ({
       onPhoneSignIn={onPhoneSignIn}
       onToggleMode={onToggleMode}
       onChangeRole={onChangeRole}
+      onOTPAuth={onOTPAuth}
     />
   );
 };

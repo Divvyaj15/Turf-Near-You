@@ -11,7 +11,7 @@ export const useAuthState = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'customer' | 'turf_owner' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete'>('auth');
+  const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete' | 'otp'>('auth');
   const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string, phoneNumber: string} | null>(null);
 
   const resetForm = () => {

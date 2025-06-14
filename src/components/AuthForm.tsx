@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Mail, Phone } from 'lucide-react';
+import { Eye, EyeOff, Mail, Phone, Key } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AuthFormProps {
@@ -23,6 +22,7 @@ interface AuthFormProps {
   onPhoneSignIn?: (e: React.FormEvent) => void;
   onToggleMode: () => void;
   onChangeRole: () => void;
+  onOTPAuth?: () => void;
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({
@@ -40,10 +40,11 @@ const AuthForm: React.FC<AuthFormProps> = ({
   onSubmit,
   onPhoneSignIn,
   onToggleMode,
-  onChangeRole
+  onChangeRole,
+  onOTPAuth
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [signInMethod, setSignInMethod] = useState<'email' | 'phone'>('email');
+  const [signInMethod, setSignInMethod] = useState<'email' | 'phone' | 'otp'>('email');
 
   return (
     <Card className="shadow-2xl">
@@ -85,8 +86,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
       
       <CardContent>
         {!isSignUp && (
-          <Tabs value={signInMethod} onValueChange={(value) => setSignInMethod(value as 'email' | 'phone')} className="w-full mb-6">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={signInMethod} onValueChange={(value) => setSignInMethod(value as 'email' | 'phone' | 'otp')} className="w-full mb-6">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="email" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Email
@@ -94,6 +95,10 @@ const AuthForm: React.FC<AuthFormProps> = ({
               <TabsTrigger value="phone" className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
                 Phone
+              </TabsTrigger>
+              <TabsTrigger value="otp" className="flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                OTP
               </TabsTrigger>
             </TabsList>
             
@@ -197,6 +202,22 @@ const AuthForm: React.FC<AuthFormProps> = ({
                   {isLoading ? 'Loading...' : 'Sign In with Phone'}
                 </Button>
               </form>
+            </TabsContent>
+            
+            <TabsContent value="otp">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Sign in using a 6-digit code sent to your email
+                </p>
+                <Button 
+                  onClick={onOTPAuth}
+                  className="w-full cricket-gradient text-white hover:opacity-90"
+                  disabled={isLoading}
+                >
+                  <Key className="w-4 h-4 mr-2" />
+                  Continue with Email OTP
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         )}

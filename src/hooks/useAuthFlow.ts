@@ -85,6 +85,10 @@ export const useAuthFlow = () => {
     );
   };
 
+  const handleOTPAuth = () => {
+    setStep('otp');
+  };
+
   return {
     // State
     isSignUp,
@@ -111,6 +115,7 @@ export const useAuthFlow = () => {
     handleBackToAuth,
     handleReturnHome,
     handleRoleSelect,
-    handleOwnerRegistrationComplete: handleOwnerRegistrationCompleteWrapper
+    handleOwnerRegistrationComplete: handleOwnerRegistrationCompleteWrapper,
+    handleOTPAuth
   };
 };
