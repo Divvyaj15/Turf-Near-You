@@ -47,7 +47,7 @@ export const useAuthFlow = () => {
       phoneNumber,
       selectedRole,
       setIsLoading,
-      setStep,
+      (newStep: string) => setStep(newStep as any),
       setTempUserData,
       validateSignUpFields
     );
@@ -80,7 +80,7 @@ export const useAuthFlow = () => {
       ownerData,
       tempUserData,
       setIsLoading,
-      setStep,
+      (newStep: string) => setStep(newStep as any),
       setTempUserData
     );
   };

@@ -56,24 +56,24 @@ const FindPlayers = () => {
       name: 'Cricket', 
       icon: '🏏',
       color: 'bg-green-500',
-      players: '2,341',
-      games: '156'
+      players: '0',
+      games: '0'
     },
     { 
       id: 'football', 
       name: 'Football', 
       icon: '⚽',
       color: 'bg-blue-500',
-      players: '1,892',
-      games: '89'
+      players: '0',
+      games: '0'
     },
     { 
       id: 'pickleball', 
       name: 'Pickleball', 
       icon: '🏓',
       color: 'bg-purple-500',
-      players: '743',
-      games: '45'
+      players: '0',
+      games: '0'
     }
   ];
 
@@ -127,25 +127,25 @@ const FindPlayers = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">5,000+</div>
+              <div className="text-2xl font-bold text-primary">0</div>
               <div className="text-sm text-gray-600">Active Players</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">290+</div>
+              <div className="text-2xl font-bold text-primary">0</div>
               <div className="text-sm text-gray-600">Games Today</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">50+</div>
+              <div className="text-2xl font-bold text-primary">0</div>
               <div className="text-sm text-gray-600">Premium Turfs</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">4.8★</div>
+              <div className="text-2xl font-bold text-primary">0.0★</div>
               <div className="text-sm text-gray-600">Avg Rating</div>
             </CardContent>
           </Card>
