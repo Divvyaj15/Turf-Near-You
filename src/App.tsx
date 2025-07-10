@@ -16,8 +16,6 @@ import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
 import PhoneVerificationPage from "./pages/PhoneVerificationPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -41,14 +39,6 @@ const App = () => (
                 <Route path="/find-players" element={<FindPlayers />} />
                 <Route path="/player-profile-setup" element={<PlayerProfileSetup />} />
                 <Route path="/my-profile" element={<MyProfile />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  } 
-                />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

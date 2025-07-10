@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Shield } from "lucide-react";
 
 const Navbar = () => {
   const { user, userRole, signOut } = useAuth();
@@ -27,8 +26,6 @@ const Navbar = () => {
       });
     }
   };
-
-  const isAdmin = user?.email === 'divvyavidhyutjain601@gmail.com';
 
   return (
     <nav className="bg-white shadow-md">
@@ -55,12 +52,6 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                {isAdmin && (
-                  <Link to="/admin" className="text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                    <Shield className="w-4 h-4 mr-1" />
-                    Admin Panel
-                  </Link>
-                )}
                 {userRole === 'customer' && (
                   <>
                     <Link to="/find-players" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
