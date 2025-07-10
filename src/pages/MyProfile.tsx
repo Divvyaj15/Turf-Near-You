@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,16 +10,16 @@ import { User, Phone, MapPin, Calendar, Star, Trophy, Users } from 'lucide-react
 
 interface UserProfile {
   full_name: string;
-  phone_number: string;
-  age: number;
-  gender: string;
-  location: string;
-  max_travel_distance: number;
-  whatsapp_number: string;
-  preferred_contact: string;
-  is_available: boolean;
-  total_games_played: number;
-  overall_rating: number;
+  phone_number: string | null;
+  age: number | null;
+  gender: string | null;
+  location: string | null;
+  max_travel_distance: number | null;
+  whatsapp_number: string | null;
+  preferred_contact: string | null;
+  is_available: boolean | null;
+  total_games_played: number | null;
+  overall_rating: number | null;
 }
 
 interface SportProfile {
@@ -199,18 +198,24 @@ const MyProfile = () => {
                     <label className="text-sm font-medium text-muted-foreground">Gender</label>
                     <p className="text-lg capitalize">{userProfile.gender || 'Not specified'}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{userProfile.phone_number}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span>{userProfile.location}</span>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Max Travel Distance</label>
-                    <p className="text-lg">{userProfile.max_travel_distance} km</p>
-                  </div>
+                  {userProfile.phone_number && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span>{userProfile.phone_number}</span>
+                    </div>
+                  )}
+                  {userProfile.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span>{userProfile.location}</span>
+                    </div>
+                  )}
+                  {userProfile.max_travel_distance && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Max Travel Distance</label>
+                      <p className="text-lg">{userProfile.max_travel_distance} km</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-4 pt-4">
@@ -240,14 +245,14 @@ const MyProfile = () => {
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm">Games Played</span>
                   </div>
-                  <span className="font-semibold">{userProfile.total_games_played}</span>
+                  <span className="font-semibold">{userProfile.total_games_played || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Star className="w-4 h-4 text-yellow-500" />
                     <span className="text-sm">Rating</span>
                   </div>
-                  <span className="font-semibold">{userProfile.overall_rating.toFixed(1)}</span>
+                  <span className="font-semibold">{(userProfile.overall_rating || 0).toFixed(1)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -257,10 +262,12 @@ const MyProfile = () => {
                 <CardTitle>Contact Preferences</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">Preferred: </span>
-                  <span className="capitalize">{userProfile.preferred_contact}</span>
-                </p>
+                {userProfile.preferred_contact && (
+                  <p className="text-sm">
+                    <span className="font-medium">Preferred: </span>
+                    <span className="capitalize">{userProfile.preferred_contact}</span>
+                  </p>
+                )}
                 {userProfile.whatsapp_number && (
                   <p className="text-sm">
                     <span className="font-medium">WhatsApp: </span>

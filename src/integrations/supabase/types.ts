@@ -501,6 +501,7 @@ export type Database = {
           location: string | null
           max_travel_distance: number | null
           overall_rating: number | null
+          phone_number: string | null
           phone_verification_code: string | null
           phone_verification_expires_at: string | null
           phone_verified: boolean | null
@@ -524,6 +525,7 @@ export type Database = {
           location?: string | null
           max_travel_distance?: number | null
           overall_rating?: number | null
+          phone_number?: string | null
           phone_verification_code?: string | null
           phone_verification_expires_at?: string | null
           phone_verified?: boolean | null
@@ -547,6 +549,7 @@ export type Database = {
           location?: string | null
           max_travel_distance?: number | null
           overall_rating?: number | null
+          phone_number?: string | null
           phone_verification_code?: string | null
           phone_verification_expires_at?: string | null
           phone_verified?: boolean | null

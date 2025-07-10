@@ -32,7 +32,7 @@ const PhoneVerificationPage = () => {
           .from('user_profiles')
           .select('phone_number, phone_verified')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking profile:', error);

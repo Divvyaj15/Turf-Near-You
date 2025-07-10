@@ -103,7 +103,7 @@ export const useAuthSubmit = () => {
     ownerData: any,
     tempUserData: {email: string, password: string, fullName: string, phoneNumber: string} | null,
     setIsLoading: (loading: boolean) => void,
-    setStep: (step: 'auth' | 'role' | 'owner-details' | 'complete') => void,
+    setStep: (step: string) => void,
     setTempUserData: (data: any) => void
   ) => {
     if (!tempUserData) return;
@@ -149,14 +149,13 @@ export const useAuthSubmit = () => {
     phoneNumber: string,
     selectedRole: 'customer' | 'turf_owner' | null,
     setIsLoading: (loading: boolean) => void,
-    setStep: (step: 'auth' | 'role' | 'owner-details' | 'complete' | 'otp') => void,
+    setStep: (step: string) => void,
     setTempUserData: (data: any) => void,
     validateSignUpFields: (fullName: string, phoneNumber: string) => boolean
   ) => {
     setIsLoading(true);
 
     try {
-      let result;
       if (isSignUp) {
         // Validate required fields
         if (!validateSignUpFields(fullName, phoneNumber)) {
@@ -211,34 +210,32 @@ export const useAuthSubmit = () => {
         navigate(`/email-verification?email=${encodeURIComponent(email)}`);
       } else {
         console.log('Attempting sign in with:', email);
-        result = await signIn(email, password);
+        const result = await signIn(email, password);
         
         if (!result.error) {
           toast({
             title: "Welcome Back! 👋",
             description: "Successfully logged in to your account",
           });
+        } else {
+          console.error('Auth error:', result.error);
+          let errorMessage = result.error.message;
+          
+          // Provide user-friendly error messages
+          if (errorMessage.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials.';
+          } else if (errorMessage.includes('Email not confirmed')) {
+            errorMessage = 'Please verify your email address before signing in.';
+          } else if (errorMessage.includes('User already registered')) {
+            errorMessage = 'An account with this email already exists. Please sign in instead.';
+          }
+          
+          toast({
+            title: "Authentication Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
         }
-      }
-
-      if (result?.error) {
-        console.error('Auth error:', result.error);
-        let errorMessage = result.error.message;
-        
-        // Provide user-friendly error messages
-        if (errorMessage.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please check your credentials.';
-        } else if (errorMessage.includes('Email not confirmed')) {
-          errorMessage = 'Please verify your email address before signing in.';
-        } else if (errorMessage.includes('User already registered')) {
-          errorMessage = 'An account with this email already exists. Please sign in instead.';
-        }
-        
-        toast({
-          title: "Authentication Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
       }
     } catch (error: any) {
       console.error('Unexpected auth error:', error);
