@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Phone, MapPin, Calendar, Star, Trophy, Users } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Star, Trophy, Users, Building2, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface UserProfile {
   full_name: string;
@@ -22,6 +22,18 @@ interface UserProfile {
   overall_rating: number | null;
 }
 
+interface TurfOwnerProfile {
+  business_name: string;
+  owner_name: string;
+  business_type: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  address: string | null;
+  years_of_operation: number | null;
+  verification_status: 'pending' | 'verified' | 'rejected';
+  created_at: string;
+}
+
 interface SportProfile {
   sport: string;
   skill_level: number;
@@ -34,10 +46,11 @@ interface SportProfile {
 }
 
 const MyProfile = () => {
-  const { user, loading } = useAuth();
+  const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [ownerProfile, setOwnerProfile] = useState<TurfOwnerProfile | null>(null);
   const [sportsProfiles, setSportsProfiles] = useState<SportProfile[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -54,37 +67,61 @@ const MyProfile = () => {
 
   const fetchUserProfile = async () => {
     try {
-      // Fetch user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
+      if (userRole === 'turf_owner') {
+        // Fetch turf owner profile
+        const { data: ownerData, error: ownerError } = await supabase
+          .from('turf_owners')
+          .select('*')
+          .eq('user_id', user?.id)
+          .single();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        throw profileError;
+        if (ownerError && ownerError.code !== 'PGRST116') {
+          throw ownerError;
+        }
+
+        if (!ownerData) {
+          // If no owner profile exists, redirect to dashboard for registration
+          navigate('/owner-dashboard');
+          return;
+        }
+
+        setOwnerProfile({
+          ...ownerData,
+          verification_status: ownerData.verification_status as 'pending' | 'verified' | 'rejected'
+        });
+      } else {
+        // Fetch user profile for customers
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user?.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          throw profileError;
+        }
+
+        if (!profile) {
+          // If no profile exists, redirect to setup
+          navigate('/player-profile-setup');
+          return;
+        }
+
+        setUserProfile(profile);
+
+        // Fetch sports profiles
+        const { data: sports, error: sportsError } = await supabase
+          .from('user_sports_profiles')
+          .select('*')
+          .eq('user_id', user?.id)
+          .eq('is_active', true);
+
+        if (sportsError) {
+          throw sportsError;
+        }
+
+        setSportsProfiles(sports || []);
       }
-
-      if (!profile) {
-        // If no profile exists, redirect to setup
-        navigate('/player-profile-setup');
-        return;
-      }
-
-      setUserProfile(profile);
-
-      // Fetch sports profiles
-      const { data: sports, error: sportsError } = await supabase
-        .from('user_sports_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_active', true);
-
-      if (sportsError) {
-        throw sportsError;
-      }
-
-      setSportsProfiles(sports || []);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast({
@@ -144,7 +181,38 @@ const MyProfile = () => {
     );
   }
 
-  if (!userProfile) {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'verified':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <User className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending Review</Badge>;
+      case 'verified':
+        return <Badge variant="secondary" className="bg-green-100 text-green-800">Verified</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
+  if (!userProfile && !ownerProfile) {
+    const profileType = userRole === 'turf_owner' ? 'owner' : 'player';
+    const setupAction = userRole === 'turf_owner' 
+      ? () => navigate('/owner-dashboard')
+      : () => navigate('/player-profile-setup');
+    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md w-full mx-4">
@@ -152,13 +220,139 @@ const MyProfile = () => {
             <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Profile Found</h3>
             <p className="text-muted-foreground mb-4">
-              Complete your player profile to start finding games and players.
+              Complete your {profileType} profile to get started.
             </p>
-            <Button onClick={() => navigate('/player-profile-setup')}>
-              Complete Profile Setup
+            <Button onClick={setupAction}>
+              Complete {profileType === 'owner' ? 'Owner Registration' : 'Profile Setup'}
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  // Turf Owner Profile View
+  if (userRole === 'turf_owner' && ownerProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Business Profile</h1>
+            <p className="text-muted-foreground">Manage your turf owner profile and business information</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Business Overview */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Business Overview
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(ownerProfile.verification_status)}
+                    {getStatusBadge(ownerProfile.verification_status)}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Business Name</label>
+                      <p className="text-lg font-semibold">{ownerProfile.business_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Owner Name</label>
+                      <p className="text-lg">{ownerProfile.owner_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Business Type</label>
+                      <p className="text-lg capitalize">{ownerProfile.business_type || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Years of Operation</label>
+                      <p className="text-lg">{ownerProfile.years_of_operation || 'Not specified'} year(s)</p>
+                    </div>
+                    {ownerProfile.contact_phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>{ownerProfile.contact_phone}</span>
+                      </div>
+                    )}
+                    {ownerProfile.address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span>{ownerProfile.address}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button onClick={() => navigate('/owner-dashboard')}>
+                      Go to Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Business Info */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Business Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {ownerProfile.contact_email && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Contact Email</label>
+                      <p className="text-sm">{ownerProfile.contact_email}</p>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Registration Date</label>
+                    <p className="text-sm">{new Date(ownerProfile.created_at).toLocaleDateString()}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {ownerProfile.verification_status === 'pending' && (
+                <Card className="bg-yellow-50 border-yellow-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-yellow-800 mb-1">Verification Pending</h4>
+                        <p className="text-sm text-yellow-700">
+                          Your account is under review. You'll receive an email once approved.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {ownerProfile.verification_status === 'verified' && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-green-800 mb-1">Verified Business</h4>
+                        <p className="text-sm text-green-700">
+                          Your business has been verified. You can now manage turfs and bookings.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
