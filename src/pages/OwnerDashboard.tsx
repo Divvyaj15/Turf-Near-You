@@ -10,6 +10,7 @@ import { Plus, Building, Users, Calendar, AlertCircle, Clock, CheckCircle, XCirc
 import AddTurfForm from '@/components/AddTurfForm';
 import TurfManagement from '@/components/TurfManagement';
 import BookingManagement from '@/components/BookingManagement';
+import OwnerRegistrationForm from '@/components/OwnerRegistrationForm';
 import { useTurfs } from '@/hooks/useTurfs';
 
 interface TurfOwnerData {
@@ -33,6 +34,7 @@ const OwnerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showAddTurf, setShowAddTurf] = useState(false);
+  const [showOwnerRegistration, setShowOwnerRegistration] = useState(false);
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -142,7 +144,58 @@ const OwnerDashboard = () => {
     );
   }
 
+  const handleOwnerRegistrationComplete = async (ownerFormData: any) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('turf_owners')
+        .insert({
+          user_id: user.id,
+          business_name: ownerFormData.businessName,
+          owner_name: ownerFormData.ownerName,
+          business_type: ownerFormData.businessType,
+          contact_phone: ownerFormData.contactPhone,
+          contact_email: ownerFormData.contactEmail,
+          address: ownerFormData.address,
+          years_of_operation: ownerFormData.yearsOfOperation[0]
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Registration Submitted!",
+        description: "Your turf owner application has been submitted for review. You'll receive an email within 24-48 hours.",
+      });
+
+      setShowOwnerRegistration(false);
+      fetchOwnerData(); // Refresh the data
+    } catch (error: any) {
+      console.error('Owner registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!ownerData) {
+    if (showOwnerRegistration) {
+      return (
+        <div className="max-w-4xl mx-auto p-6">
+          <OwnerRegistrationForm
+            onBack={() => setShowOwnerRegistration(false)}
+            onComplete={handleOwnerRegistrationComplete}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card>
@@ -152,7 +205,7 @@ const OwnerDashboard = () => {
             <p className="text-gray-500 text-center mb-6">
               It looks like you haven't completed your turf owner registration yet.
             </p>
-            <Button onClick={() => navigate('/auth')} className="cricket-gradient text-white">
+            <Button onClick={() => setShowOwnerRegistration(true)} className="cricket-gradient text-white">
               Complete Registration
             </Button>
           </CardContent>

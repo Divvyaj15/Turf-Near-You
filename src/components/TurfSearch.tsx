@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Users, DollarSign, Star, Search } from 'lucide-react';
+import { MapPin, Users, DollarSign, Star, Search, Building2 } from 'lucide-react';
 import { useTurfs } from '@/hooks/useTurfs';
 import { useTurfReviews } from '@/hooks/useReviews';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +57,12 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
               <MapPin className="w-4 h-4 mr-1" />
               {turf.area}
             </div>
+            {turf.turf_owners && (
+              <div className="flex items-center text-sm text-muted-foreground mt-1">
+                <Building2 className="w-4 h-4 mr-1" />
+                <span>by {turf.turf_owners.business_name}</span>
+              </div>
+            )}
           </div>
 
           {turf.description && (

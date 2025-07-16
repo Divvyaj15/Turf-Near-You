@@ -26,6 +26,11 @@ export interface Turf {
   status: string | null;
   created_at: string;
   updated_at: string;
+  turf_owners?: {
+    business_name: string;
+    owner_name: string;
+    contact_phone: string | null;
+  };
 }
 
 export const useTurfs = () => {
@@ -38,7 +43,14 @@ export const useTurfs = () => {
 
       const { data, error } = await supabase
         .from('turfs')
-        .select('*')
+        .select(`
+          *,
+          turf_owners (
+            business_name,
+            owner_name,
+            contact_phone
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
