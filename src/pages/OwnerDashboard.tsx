@@ -59,11 +59,15 @@ const OwnerDashboard = () => {
     if (!user) return;
 
     try {
+      console.log('Fetching owner data for user:', user.id);
+      
       const { data, error } = await supabase
         .from('turf_owners')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+
+      console.log('Owner data query result:', { data, error });
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching owner data:', error);
@@ -81,8 +85,10 @@ const OwnerDashboard = () => {
           ...data,
           verification_status: data.verification_status as 'pending' | 'verified' | 'rejected'
         };
+        console.log('Setting owner data:', ownerDataWithTypedStatus);
         setOwnerData(ownerDataWithTypedStatus);
       } else {
+        console.log('No owner data found for user');
         setOwnerData(null);
       }
     } catch (error) {
@@ -150,9 +156,10 @@ const OwnerDashboard = () => {
     try {
       setLoading(true);
       
+      // Use upsert to handle existing records
       const { error } = await supabase
         .from('turf_owners')
-        .insert({
+        .upsert({
           user_id: user.id,
           business_name: ownerFormData.businessName,
           owner_name: ownerFormData.ownerName,
@@ -160,7 +167,10 @@ const OwnerDashboard = () => {
           contact_phone: ownerFormData.contactPhone,
           contact_email: ownerFormData.contactEmail,
           address: ownerFormData.address,
-          years_of_operation: ownerFormData.yearsOfOperation[0]
+          years_of_operation: ownerFormData.yearsOfOperation[0],
+          verification_status: 'pending' // Reset status when updating
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) throw error;
