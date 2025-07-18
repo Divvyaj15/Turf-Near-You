@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import FindPlayers from "./pages/FindPlayers";
 import PlayerProfileSetup from "./pages/PlayerProfileSetup";
 import MyProfile from "./pages/MyProfile";
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/phone-verification" element={<PhoneVerificationPage />} />
                 <Route path="/owner-dashboard" element={<OwnerDashboard />} />
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/find-players" element={<FindPlayers />} />
                 <Route path="/player-profile-setup" element={<PlayerProfileSetup />} />
                 <Route path="/my-profile" element={<MyProfile />} />
