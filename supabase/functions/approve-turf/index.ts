@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface ApprovalRequest {
-  turfId: string;
+  turfId?: string; // Made optional since turf owner might not have turfs yet
   ownerId: string;
   action: 'approve' | 'reject';
   rejectionReason?: string;
@@ -30,14 +30,16 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Processing ${action} for turf:`, turfId);
 
     if (action === 'approve') {
-      // Update turf status to active
-      const { error: turfError } = await supabase
-        .from('turfs')
-        .update({ status: 'active' })
-        .eq('id', turfId);
+      // Update turf status to active (only if turfId is provided)
+      if (turfId) {
+        const { error: turfError } = await supabase
+          .from('turfs')
+          .update({ status: 'active' })
+          .eq('id', turfId);
 
-      if (turfError) {
-        throw new Error(`Failed to approve turf: ${turfError.message}`);
+        if (turfError) {
+          throw new Error(`Failed to approve turf: ${turfError.message}`);
+        }
       }
 
       // Update owner verification status to verified
@@ -52,14 +54,16 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log('Turf and owner approved successfully');
     } else if (action === 'reject') {
-      // Update turf status to rejected
-      const { error: turfError } = await supabase
-        .from('turfs')
-        .update({ status: 'rejected' })
-        .eq('id', turfId);
+      // Update turf status to rejected (only if turfId is provided)
+      if (turfId) {
+        const { error: turfError } = await supabase
+          .from('turfs')
+          .update({ status: 'rejected' })
+          .eq('id', turfId);
 
-      if (turfError) {
-        throw new Error(`Failed to reject turf: ${turfError.message}`);
+        if (turfError) {
+          throw new Error(`Failed to reject turf: ${turfError.message}`);
+        }
       }
 
       // Update owner verification status to rejected
