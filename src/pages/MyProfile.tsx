@@ -426,6 +426,27 @@ const MyProfile = () => {
 
           {/* Stats */}
           <div className="space-y-6">
+            {/* Become Turf Owner Section */}
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Building2 className="w-5 h-5" />
+                  Own a Sports Turf?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-blue-700">
+                  Register your turf and start earning by allowing players to book your facility.
+                </p>
+                <Button 
+                  onClick={() => navigate('/auth?tab=register&role=turf_owner')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Become a Turf Owner
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
