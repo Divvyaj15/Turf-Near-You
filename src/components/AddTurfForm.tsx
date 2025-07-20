@@ -130,7 +130,7 @@ const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
         weekend_premium_percentage: data.weekendPremium,
         peak_hours_premium_percentage: data.peakHoursPremium,
         owner_id: ownerData.id,
-        status: 'pending', // Set status to pending for admin approval
+        status: 'pending_approval', // Set status to pending_approval for admin approval
       };
 
       const { data: insertedTurf, error: turfError } = await supabase
