@@ -4,26 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Mail, Phone } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface AuthFormProps {
   isSignUp: boolean;
   email: string;
   password: string;
   fullName: string;
-  phoneNumber: string;
   selectedRole: 'customer' | 'turf_owner' | null;
   isLoading: boolean;
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
   onFullNameChange: (fullName: string) => void;
-  onPhoneNumberChange: (phoneNumber: string) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onPhoneSignIn?: (e: React.FormEvent) => void;
   onToggleMode: () => void;
   onChangeRole: () => void;
-  onOTPAuth?: () => void;
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({
@@ -31,20 +26,16 @@ const AuthForm: React.FC<AuthFormProps> = ({
   email,
   password,
   fullName,
-  phoneNumber,
   selectedRole,
   isLoading,
   onEmailChange,
   onPasswordChange,
   onFullNameChange,
-  onPhoneNumberChange,
   onSubmit,
-  onPhoneSignIn,
   onToggleMode,
   onChangeRole
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [signInMethod, setSignInMethod] = useState<'email' | 'phone'>('email');
 
   return (
     <Card className="shadow-2xl">
@@ -86,120 +77,54 @@ const AuthForm: React.FC<AuthFormProps> = ({
       
       <CardContent>
         {!isSignUp && (
-          <Tabs value={signInMethod} onValueChange={(value) => setSignInMethod(value as 'email' | 'phone')} className="w-full mb-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email
-              </TabsTrigger>
-              <TabsTrigger value="phone" className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Phone
-              </TabsTrigger>
-            </TabsList>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => onEmailChange(e.target.value)}
+                required
+              />
+            </div>
             
-            <TabsContent value="email">
-              <form onSubmit={onSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => onEmailChange(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => onPasswordChange(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full cricket-gradient text-white hover:opacity-90" 
-                  disabled={isLoading}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => onPasswordChange(e.target.value)}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {isLoading ? 'Loading...' : 'Sign In with Email'}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
                 </Button>
-              </form>
-            </TabsContent>
+              </div>
+            </div>
             
-            <TabsContent value="phone">
-              <form onSubmit={onPhoneSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phoneSignIn">Phone Number</Label>
-                  <Input
-                    id="phoneSignIn"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={phoneNumber}
-                    onChange={(e) => onPhoneNumberChange(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="passwordPhone">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="passwordPhone"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => onPasswordChange(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full cricket-gradient text-white hover:opacity-90" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Loading...' : 'Sign In with Phone'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            <Button 
+              type="submit" 
+              className="w-full cricket-gradient text-white hover:opacity-90" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Sign In'}
+            </Button>
+          </form>
         )}
 
         {isSignUp && (
@@ -216,17 +141,6 @@ const AuthForm: React.FC<AuthFormProps> = ({
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number * <span className="text-xs text-muted-foreground">(Required for verification)</span></Label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="Enter your phone number"
-                value={phoneNumber}
-                onChange={(e) => onPhoneNumberChange(e.target.value)}
-                required={isSignUp}
-              />
-            </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -274,7 +188,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
             >
               {isLoading ? 'Loading...' : (
                 isSignUp 
-                  ? (selectedRole === 'turf_owner' ? 'Continue to Business Details' : 'Create Account & Verify Email')
+                  ? (selectedRole === 'turf_owner' ? 'Continue to Business Details' : 'Create Account')
                   : 'Sign In'
               )}
             </Button>

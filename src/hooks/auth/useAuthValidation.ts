@@ -10,29 +10,11 @@ export const useAuthValidation = () => {
     return phoneRegex.test(phone.trim());
   };
 
-  const validateSignUpFields = (fullName: string, phoneNumber: string): boolean => {
+  const validateSignUpFields = (fullName: string): boolean => {
     if (!fullName.trim()) {
       toast({
         title: "Missing Information",
         description: "Please enter your full name",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (!phoneNumber.trim()) {
-      toast({
-        title: "Missing Information", 
-        description: "Please enter your phone number for verification",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (!validatePhoneNumber(phoneNumber)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
         variant: "destructive"
       });
       return false;

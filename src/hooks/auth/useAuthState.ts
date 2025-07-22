@@ -8,17 +8,15 @@ export const useAuthState = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'customer' | 'turf_owner' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete' | 'otp'>('auth');
-  const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string, phoneNumber: string} | null>(null);
+  const [step, setStep] = useState<'auth' | 'role' | 'owner-details' | 'complete'>('auth');
+  const [tempUserData, setTempUserData] = useState<{email: string, password: string, fullName: string} | null>(null);
 
   const resetForm = () => {
     setEmail('');
     setPassword('');
     setFullName('');
-    setPhoneNumber('');
     setSelectedRole(null);
     setStep('auth');
     setIsSignUp(false);
@@ -45,7 +43,6 @@ export const useAuthState = () => {
     email,
     password,
     fullName,
-    phoneNumber,
     selectedRole,
     isLoading,
     step,
@@ -55,7 +52,6 @@ export const useAuthState = () => {
     setEmail,
     setPassword,
     setFullName,
-    setPhoneNumber,
     setSelectedRole,
     setIsLoading,
     setStep,

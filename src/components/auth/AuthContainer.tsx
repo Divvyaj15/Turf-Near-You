@@ -14,7 +14,6 @@ const AuthContainer = () => {
     email,
     password,
     fullName,
-    phoneNumber,
     selectedRole,
     isLoading,
     step,
@@ -24,21 +23,18 @@ const AuthContainer = () => {
     setEmail,
     setPassword,
     setFullName,
-    setPhoneNumber,
     
     // Handlers
     handleSubmit,
-    handlePhoneSignIn,
     handleToggleMode,
     handleChangeRole,
     handleBackToAuth,
     handleReturnHome,
     handleRoleSelect,
-    handleOwnerRegistrationComplete,
-    handleOTPAuth
+    handleOwnerRegistrationComplete
   } = useAuthFlow();
 
-  if (step === 'role' || step === 'owner-details' || step === 'otp') {
+  if (step === 'role' || step === 'owner-details') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center p-4">
         <AuthStepRenderer
@@ -47,23 +43,19 @@ const AuthContainer = () => {
           email={email}
           password={password}
           fullName={fullName}
-          phoneNumber={phoneNumber}
           selectedRole={selectedRole}
           isLoading={isLoading}
           tempUserData={tempUserData}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onFullNameChange={setFullName}
-          onPhoneNumberChange={setPhoneNumber}
           onSubmit={handleSubmit}
-          onPhoneSignIn={handlePhoneSignIn}
           onToggleMode={handleToggleMode}
           onChangeRole={handleChangeRole}
           onBackToAuth={handleBackToAuth}
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
-          onOTPAuth={handleOTPAuth}
         />
       </div>
     );
@@ -78,23 +70,19 @@ const AuthContainer = () => {
           email={email}
           password={password}
           fullName={fullName}
-          phoneNumber={phoneNumber}
           selectedRole={selectedRole}
           isLoading={isLoading}
           tempUserData={tempUserData}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onFullNameChange={setFullName}
-          onPhoneNumberChange={setPhoneNumber}
           onSubmit={handleSubmit}
-          onPhoneSignIn={handlePhoneSignIn}
           onToggleMode={handleToggleMode}
           onChangeRole={handleChangeRole}
           onBackToAuth={handleBackToAuth}
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
-          onOTPAuth={handleOTPAuth}
         />
       </div>
     );
@@ -119,23 +107,19 @@ const AuthContainer = () => {
           email={email}
           password={password}
           fullName={fullName}
-          phoneNumber={phoneNumber}
           selectedRole={selectedRole}
           isLoading={isLoading}
           tempUserData={tempUserData}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onFullNameChange={setFullName}
-          onPhoneNumberChange={setPhoneNumber}
           onSubmit={handleSubmit}
-          onPhoneSignIn={handlePhoneSignIn}
           onToggleMode={handleToggleMode}
           onChangeRole={handleChangeRole}
           onBackToAuth={handleBackToAuth}
           onRoleSelect={handleRoleSelect}
           onOwnerRegistrationComplete={handleOwnerRegistrationComplete}
           onReturnHome={handleReturnHome}
-          onOTPAuth={handleOTPAuth}
         />
       </div>
     </div>

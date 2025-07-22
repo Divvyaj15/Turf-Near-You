@@ -101,7 +101,7 @@ export const useAuthSubmit = () => {
 
   const handleOwnerRegistrationComplete = async (
     ownerData: any,
-    tempUserData: {email: string, password: string, fullName: string, phoneNumber: string} | null,
+    tempUserData: {email: string, password: string, fullName: string} | null,
     setIsLoading: (loading: boolean) => void,
     setStep: (step: string) => void,
     setTempUserData: (data: any) => void
@@ -112,7 +112,7 @@ export const useAuthSubmit = () => {
     
     try {
       // First create the user account
-      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner', tempUserData.phoneNumber);
+      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner');
       
       if (result.error) {
         toast({
@@ -146,19 +146,18 @@ export const useAuthSubmit = () => {
     email: string,
     password: string,
     fullName: string,
-    phoneNumber: string,
     selectedRole: 'customer' | 'turf_owner' | null,
     setIsLoading: (loading: boolean) => void,
     setStep: (step: string) => void,
     setTempUserData: (data: any) => void,
-    validateSignUpFields: (fullName: string, phoneNumber: string) => boolean
+    validateSignUpFields: (fullName: string) => boolean
   ) => {
     setIsLoading(true);
 
     try {
       if (isSignUp) {
         // Validate required fields
-        if (!validateSignUpFields(fullName, phoneNumber)) {
+        if (!validateSignUpFields(fullName)) {
           setIsLoading(false);
           return;
         }
@@ -171,13 +170,13 @@ export const useAuthSubmit = () => {
         
         // For turf owner, store temp data and go to owner details
         if (selectedRole === 'turf_owner') {
-          setTempUserData({ email, password, fullName, phoneNumber });
+          setTempUserData({ email, password, fullName });
           setStep('owner-details');
           setIsLoading(false);
           return;
         }
         
-        // For customer, proceed with normal signup using OTP
+        // For customer, proceed with normal signup
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -185,8 +184,7 @@ export const useAuthSubmit = () => {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: fullName,
-              role: selectedRole,
-              phone_number: phoneNumber
+              role: selectedRole
             }
           }
         });
@@ -203,11 +201,11 @@ export const useAuthSubmit = () => {
 
         toast({
           title: "Account Created! 📧",
-          description: "Please check your email for the verification code.",
+          description: "Please check your email to verify your account.",
         });
         
-        // Redirect to email verification page with email parameter
-        navigate(`/email-verification?email=${encodeURIComponent(email)}`);
+        // Stay on the same page or redirect to a success page
+        navigate('/');
       } else {
         console.log('Attempting sign in with:', email);
         const result = await signIn(email, password);

@@ -90,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: string = 'customer', phoneNumber: string = '') => {
-    console.log('Sign up attempt:', email, role, phoneNumber);
+  const signUp = async (email: string, password: string, fullName: string, role: string = 'customer') => {
+    console.log('Sign up attempt:', email, role);
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -101,8 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
-          role: role,
-          phone_number: phoneNumber
+          role: role
         }
       }
     });

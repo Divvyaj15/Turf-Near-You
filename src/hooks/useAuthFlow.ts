@@ -14,7 +14,6 @@ export const useAuthFlow = () => {
     email,
     password,
     fullName,
-    phoneNumber,
     selectedRole,
     isLoading,
     step,
@@ -22,7 +21,6 @@ export const useAuthFlow = () => {
     setEmail,
     setPassword,
     setFullName,
-    setPhoneNumber,
     setSelectedRole,
     setIsLoading,
     setStep,
@@ -31,8 +29,8 @@ export const useAuthFlow = () => {
     handleToggleMode
   } = useAuthState();
 
-  const { validatePhoneNumber, validateSignUpFields } = useAuthValidation();
-  const { handlePhoneSignIn, handleOwnerRegistrationComplete, handleRegularSubmit } = useAuthSubmit();
+  const { validateSignUpFields } = useAuthValidation();
+  const { handleOwnerRegistrationComplete, handleRegularSubmit } = useAuthSubmit();
   
   // Set up navigation effects
   useAuthNavigation();
@@ -44,7 +42,6 @@ export const useAuthFlow = () => {
       email,
       password,
       fullName,
-      phoneNumber,
       selectedRole,
       setIsLoading,
       (newStep: string) => setStep(newStep as any),
@@ -53,10 +50,6 @@ export const useAuthFlow = () => {
     );
   };
 
-  const handlePhoneSignInWrapper = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handlePhoneSignIn(phoneNumber, password, setIsLoading, validatePhoneNumber);
-  };
 
   const handleRoleSelect = (role: 'customer' | 'turf_owner') => {
     setSelectedRole(role);
@@ -85,9 +78,6 @@ export const useAuthFlow = () => {
     );
   };
 
-  const handleOTPAuth = () => {
-    setStep('otp');
-  };
 
   return {
     // State
@@ -95,7 +85,6 @@ export const useAuthFlow = () => {
     email,
     password,
     fullName,
-    phoneNumber,
     selectedRole,
     isLoading,
     step,
@@ -105,17 +94,14 @@ export const useAuthFlow = () => {
     setEmail,
     setPassword,
     setFullName,
-    setPhoneNumber,
     
     // Handlers
     handleSubmit,
-    handlePhoneSignIn: handlePhoneSignInWrapper,
     handleToggleMode,
     handleChangeRole,
     handleBackToAuth,
     handleReturnHome,
     handleRoleSelect,
-    handleOwnerRegistrationComplete: handleOwnerRegistrationCompleteWrapper,
-    handleOTPAuth
+    handleOwnerRegistrationComplete: handleOwnerRegistrationCompleteWrapper
   };
 };
