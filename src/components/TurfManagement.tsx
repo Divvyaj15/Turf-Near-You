@@ -12,6 +12,7 @@ import { Edit, Trash2, Calendar as CalendarIcon, BarChart2, Settings, Clock } fr
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Turf } from '@/hooks/useTurfs';
+import { TurfSlotManagement } from '@/components/TurfSlotManagement';
 
 interface TurfManagementProps {
   turfs: Turf[];
@@ -178,74 +179,14 @@ const TurfManagement: React.FC<TurfManagementProps> = ({ turfs, onTurfUpdate }) 
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1">
                       <Clock className="w-4 h-4 mr-2" />
-                      Availability
+                      Manage Slots
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Set Availability</DialogTitle>
+                      <DialogTitle>Manage Time Slots - {turf.name}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Start Time</Label>
-                          <Input
-                            type="time"
-                            value={availabilityData.startTime}
-                            onChange={(e) =>
-                              setAvailabilityData((prev) => ({
-                                ...prev,
-                                startTime: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>End Time</Label>
-                          <Input
-                            type="time"
-                            value={availabilityData.endTime}
-                            onChange={(e) =>
-                              setAvailabilityData((prev) => ({
-                                ...prev,
-                                endTime: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Maintenance Days</Label>
-                        <Select
-                          value={availabilityData.maintenanceDays.join(',')}
-                          onValueChange={(value) =>
-                            setAvailabilityData((prev) => ({
-                              ...prev,
-                              maintenanceDays: value.split(','),
-                            }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select maintenance days" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="monday">Monday</SelectItem>
-                            <SelectItem value="tuesday">Tuesday</SelectItem>
-                            <SelectItem value="wednesday">Wednesday</SelectItem>
-                            <SelectItem value="thursday">Thursday</SelectItem>
-                            <SelectItem value="friday">Friday</SelectItem>
-                            <SelectItem value="saturday">Saturday</SelectItem>
-                            <SelectItem value="sunday">Sunday</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        className="w-full"
-                        onClick={() => handleAvailabilityUpdate(turf.id)}
-                      >
-                        Save Availability
-                      </Button>
-                    </div>
+                    <TurfSlotManagement turfId={turf.id} />
                   </DialogContent>
                 </Dialog>
 

@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateBooking } from '@/hooks/useBookings';
 import { Turf } from '@/hooks/useTurfs';
+import { useTurfSlots, TurfSlot } from '@/hooks/useTurfSlots';
 
 interface BookingFormProps {
   turf: Turf;
@@ -32,8 +33,11 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
   const { user } = useAuth();
   const { toast } = useToast();
   const createBooking = useCreateBooking();
+  const { data: turfSlots = [] } = useTurfSlots(turf.id);
 
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedSlot, setSelectedSlot] = useState<TurfSlot | null>(null);
+  const [bookingMode, setBookingMode] = useState<'hourly' | 'slot'>('slot');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [playerName, setPlayerName] = useState('');
@@ -41,41 +45,60 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
   const [playerEmail, setPlayerEmail] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
-  const calculatePricing = (): PricingResult | null => {
-    if (!selectedDate || !startTime || !endTime) return null;
-
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
+  const getAvailableSlots = () => {
+    if (!selectedDate) return [];
     
-    if (end <= start) return null;
-
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    const baseAmount = hours * turf.base_price_per_hour;
-    
-    let premiumCharges = 0;
-    
-    // Weekend premium
     const dayOfWeek = selectedDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      premiumCharges += baseAmount * (turf.weekend_premium_percentage / 100);
-    }
-    
-    // Peak hours premium
-    if (turf.peak_hours_start && turf.peak_hours_end) {
-      const peakStart = new Date(`2000-01-01T${turf.peak_hours_start}`);
-      const peakEnd = new Date(`2000-01-01T${turf.peak_hours_end}`);
-      
-      if (start >= peakStart && end <= peakEnd) {
-        premiumCharges += baseAmount * (turf.peak_hours_premium_percentage / 100);
-      }
-    }
+    return turfSlots.filter(slot => slot.day_of_week === dayOfWeek && slot.is_available);
+  };
 
-    return {
-      hours,
-      baseAmount,
-      premiumCharges,
-      totalAmount: baseAmount + premiumCharges
-    };
+  const calculatePricing = (): PricingResult | null => {
+    if (bookingMode === 'slot') {
+      if (!selectedSlot) return null;
+      
+      return {
+        hours: selectedSlot.duration_minutes / 60,
+        baseAmount: selectedSlot.price_per_slot,
+        premiumCharges: 0,
+        totalAmount: selectedSlot.price_per_slot
+      };
+    } else {
+      // Hourly booking logic (existing)
+      if (!selectedDate || !startTime || !endTime) return null;
+
+      const start = new Date(`2000-01-01T${startTime}`);
+      const end = new Date(`2000-01-01T${endTime}`);
+      
+      if (end <= start) return null;
+
+      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      const baseAmount = hours * turf.base_price_per_hour;
+      
+      let premiumCharges = 0;
+      
+      // Weekend premium
+      const dayOfWeek = selectedDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        premiumCharges += baseAmount * (turf.weekend_premium_percentage / 100);
+      }
+      
+      // Peak hours premium
+      if (turf.peak_hours_start && turf.peak_hours_end) {
+        const peakStart = new Date(`2000-01-01T${turf.peak_hours_start}`);
+        const peakEnd = new Date(`2000-01-01T${turf.peak_hours_end}`);
+        
+        if (start >= peakStart && end <= peakEnd) {
+          premiumCharges += baseAmount * (turf.peak_hours_premium_percentage / 100);
+        }
+      }
+
+      return {
+        hours,
+        baseAmount,
+        premiumCharges,
+        totalAmount: baseAmount + premiumCharges
+      };
+    }
   };
 
   const pricing = calculatePricing();
@@ -92,22 +115,33 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
       return;
     }
 
+    const bookingData: any = {
+      turf_id: turf.id,
+      user_id: user.id,
+      booking_date: format(selectedDate, 'yyyy-MM-dd'),
+      total_hours: pricing.hours,
+      base_price: pricing.baseAmount,
+      premium_charges: pricing.premiumCharges,
+      total_amount: pricing.totalAmount,
+      player_name: playerName,
+      player_phone: playerPhone,
+      player_email: playerEmail || undefined,
+      special_requests: specialRequests || undefined,
+    };
+
+    if (bookingMode === 'slot' && selectedSlot) {
+      bookingData.slot_id = selectedSlot.id;
+      bookingData.start_time = selectedSlot.start_time;
+      bookingData.end_time = selectedSlot.end_time;
+      bookingData.duration_minutes = selectedSlot.duration_minutes;
+      bookingData.slot_price = selectedSlot.price_per_slot;
+    } else {
+      bookingData.start_time = startTime;
+      bookingData.end_time = endTime;
+    }
+
     try {
-      await createBooking.mutateAsync({
-        turf_id: turf.id,
-        user_id: user.id,
-        booking_date: format(selectedDate, 'yyyy-MM-dd'),
-        start_time: startTime,
-        end_time: endTime,
-        total_hours: pricing.hours,
-        base_price: pricing.baseAmount,
-        premium_charges: pricing.premiumCharges,
-        total_amount: pricing.totalAmount,
-        player_name: playerName,
-        player_phone: playerPhone,
-        player_email: playerEmail || undefined,
-        special_requests: specialRequests || undefined,
-      });
+      await createBooking.mutateAsync(bookingData);
 
       toast({
         title: "Success!",
@@ -199,6 +233,35 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Booking Mode Selection */}
+                <div className="space-y-2">
+                  <Label>Booking Mode</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={bookingMode === 'slot' ? 'default' : 'outline'}
+                      onClick={() => {
+                        setBookingMode('slot');
+                        setSelectedSlot(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Slot Booking
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bookingMode === 'hourly' ? 'default' : 'outline'}
+                      onClick={() => {
+                        setBookingMode('hourly');
+                        setSelectedSlot(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Hourly Booking
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Date Selection */}
                 <div className="space-y-2">
                   <Label>Select Date</Label>
@@ -216,7 +279,10 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={setSelectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setSelectedSlot(null);
+                        }}
                         disabled={(date) => date < new Date()}
                         initialFocus
                       />
@@ -224,29 +290,60 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
                   </Popover>
                 </div>
 
-                {/* Time Selection */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Slot Selection (for slot booking mode) */}
+                {bookingMode === 'slot' && selectedDate && (
                   <div className="space-y-2">
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      required
-                    />
+                    <Label>Available Time Slots</Label>
+                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                      {getAvailableSlots().length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No slots available for selected date
+                        </p>
+                      ) : (
+                        getAvailableSlots().map((slot) => (
+                          <Button
+                            key={slot.id}
+                            type="button"
+                            variant={selectedSlot?.id === slot.id ? 'default' : 'outline'}
+                            onClick={() => setSelectedSlot(slot)}
+                            className="justify-between"
+                          >
+                            <span>
+                              {slot.start_time} - {slot.end_time} ({slot.duration_minutes}min)
+                            </span>
+                            <span>₹{slot.price_per_slot}</span>
+                          </Button>
+                        ))
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      required
-                    />
+                )}
+
+                {/* Time Selection (for hourly booking mode) */}
+                {bookingMode === 'hourly' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="startTime">Start Time</Label>
+                      <Input
+                        id="startTime"
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endTime">End Time</Label>
+                      <Input
+                        id="endTime"
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Player Information */}
                 <div className="space-y-4">

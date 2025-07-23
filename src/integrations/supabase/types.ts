@@ -19,6 +19,7 @@ export type Database = {
           base_price: number
           booking_date: string
           created_at: string | null
+          duration_minutes: number | null
           end_time: string
           id: string
           payment_status: string | null
@@ -26,6 +27,8 @@ export type Database = {
           player_name: string
           player_phone: string
           premium_charges: number | null
+          slot_id: string | null
+          slot_price: number | null
           special_requests: string | null
           start_time: string
           status: string | null
@@ -39,6 +42,7 @@ export type Database = {
           base_price: number
           booking_date: string
           created_at?: string | null
+          duration_minutes?: number | null
           end_time: string
           id?: string
           payment_status?: string | null
@@ -46,6 +50,8 @@ export type Database = {
           player_name: string
           player_phone: string
           premium_charges?: number | null
+          slot_id?: string | null
+          slot_price?: number | null
           special_requests?: string | null
           start_time: string
           status?: string | null
@@ -59,6 +65,7 @@ export type Database = {
           base_price?: number
           booking_date?: string
           created_at?: string | null
+          duration_minutes?: number | null
           end_time?: string
           id?: string
           payment_status?: string | null
@@ -66,6 +73,8 @@ export type Database = {
           player_name?: string
           player_phone?: string
           premium_charges?: number | null
+          slot_id?: string | null
+          slot_price?: number | null
           special_requests?: string | null
           start_time?: string
           status?: string | null
@@ -341,6 +350,7 @@ export type Database = {
           created_at: string | null
           id: string
           owner_name: string
+          rejection_reason: string | null
           updated_at: string | null
           user_id: string
           verification_status: string | null
@@ -355,6 +365,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           owner_name: string
+          rejection_reason?: string | null
           updated_at?: string | null
           user_id: string
           verification_status?: string | null
@@ -369,10 +380,50 @@ export type Database = {
           created_at?: string | null
           id?: string
           owner_name?: string
+          rejection_reason?: string | null
           updated_at?: string | null
           user_id?: string
           verification_status?: string | null
           years_of_operation?: number | null
+        }
+        Relationships: []
+      }
+      turf_slots: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          duration_minutes: number
+          end_time: string
+          id: string
+          is_available: boolean
+          price_per_slot: number
+          start_time: string
+          turf_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          duration_minutes: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          price_per_slot: number
+          start_time: string
+          turf_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          price_per_slot?: number
+          start_time?: string
+          turf_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
