@@ -11,6 +11,7 @@ import AddTurfForm from '@/components/AddTurfForm';
 import TurfManagement from '@/components/TurfManagement';
 import BookingManagement from '@/components/BookingManagement';
 import OwnerRegistrationForm from '@/components/OwnerRegistrationForm';
+import { TurfSlotManagement } from '@/components/TurfSlotManagement';
 import { useTurfs } from '@/hooks/useTurfs';
 
 interface TurfOwnerData {
@@ -35,6 +36,8 @@ const OwnerDashboard = () => {
   const { toast } = useToast();
   const [showAddTurf, setShowAddTurf] = useState(false);
   const [showOwnerRegistration, setShowOwnerRegistration] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [selectedTurfForSchedule, setSelectedTurfForSchedule] = useState<any>(null);
   const [ownerData, setOwnerData] = useState<TurfOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -357,7 +360,7 @@ const OwnerDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowSchedule(true)}>
           <CardContent className="flex items-center p-6">
             <Calendar className="w-8 h-8 text-blue-600 mr-4" />
             <div>
@@ -389,6 +392,64 @@ const OwnerDashboard = () => {
                 onBack={handleCloseAddTurf}
                 onSuccess={handleAddTurfSuccess}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Management Modal */}
+      {showSchedule && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Schedule Management</h2>
+                <Button variant="ghost" onClick={() => setShowSchedule(false)}>
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              {!selectedTurfForSchedule ? (
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">Select a turf to manage its schedule:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {turfs.map((turf) => (
+                      <Card key={turf.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedTurfForSchedule(turf)}>
+                        <CardContent className="p-4">
+                          <div className="aspect-video relative mb-3">
+                            <img
+                              src={turf.cover_image_url || '/placeholder-turf.jpg'}
+                              alt={turf.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          </div>
+                          <h3 className="font-semibold">{turf.name}</h3>
+                          <p className="text-sm text-muted-foreground">{turf.area}</p>
+                          <p className="text-sm font-medium">₹{turf.base_price_per_hour}/hr base</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {turfs.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No turfs available. Add a turf first to manage schedules.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">Managing Schedule for: {selectedTurfForSchedule.name}</h3>
+                      <p className="text-sm text-muted-foreground">{selectedTurfForSchedule.area}</p>
+                    </div>
+                    <Button variant="outline" onClick={() => setSelectedTurfForSchedule(null)}>
+                      ← Back to Turf Selection
+                    </Button>
+                  </div>
+                  <TurfSlotManagement turfId={selectedTurfForSchedule.id} />
+                </div>
+              )}
             </div>
           </div>
         </div>
