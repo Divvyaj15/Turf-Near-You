@@ -86,36 +86,60 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           avatar_url: string | null
           bio: string | null
           created_at: string
+          cricheroes_verified: boolean | null
           email: string
           full_name: string
+          gender: string | null
           id: string
+          is_available: boolean | null
           location: string | null
+          overall_rating: number | null
           phone_number: string | null
+          phone_verified: boolean | null
+          profile_image_url: string | null
+          total_games_played: number | null
           updated_at: string
         }
         Insert: {
+          age?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          cricheroes_verified?: boolean | null
           email: string
           full_name: string
+          gender?: string | null
           id: string
+          is_available?: boolean | null
           location?: string | null
+          overall_rating?: number | null
           phone_number?: string | null
+          phone_verified?: boolean | null
+          profile_image_url?: string | null
+          total_games_played?: number | null
           updated_at?: string
         }
         Update: {
+          age?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          cricheroes_verified?: boolean | null
           email?: string
           full_name?: string
+          gender?: string | null
           id?: string
+          is_available?: boolean | null
           location?: string | null
+          overall_rating?: number | null
           phone_number?: string | null
+          phone_verified?: boolean | null
+          profile_image_url?: string | null
+          total_games_played?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -293,6 +317,41 @@ export type Database = {
           },
         ]
       }
+      user_availability: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          id: string
+          is_available: boolean | null
+          time_slot: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          id?: string
+          is_available?: boolean | null
+          time_slot: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          id?: string
+          is_available?: boolean | null
+          time_slot?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_availability_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -315,6 +374,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sports_profiles: {
+        Row: {
+          batting_style: string | null
+          bowling_style: string | null
+          created_at: string
+          experience_level: string | null
+          id: string
+          is_active: boolean | null
+          playing_foot: string | null
+          preferred_positions: string[] | null
+          skill_level: number | null
+          sport: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          batting_style?: string | null
+          bowling_style?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          playing_foot?: string | null
+          preferred_positions?: string[] | null
+          skill_level?: number | null
+          sport: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          batting_style?: string | null
+          bowling_style?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          playing_foot?: string | null
+          preferred_positions?: string[] | null
+          skill_level?: number | null
+          sport?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sports_profiles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

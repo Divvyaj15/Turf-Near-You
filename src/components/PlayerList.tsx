@@ -28,7 +28,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
     queryKey: ['players', sport, filters],
     queryFn: async () => {
       let query = supabase
-        .from('user_profiles')
+        .from('profiles')
         .select(`
           *,
           user_sports_profiles(

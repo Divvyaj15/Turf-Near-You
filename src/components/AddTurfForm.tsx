@@ -96,46 +96,41 @@ const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // Get owner data first
-      const { data: ownerData, error: ownerError } = await supabase
-        .from('turf_owners')
-        .select('*')
+      // Check if user has owner role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', user.id)
+        .eq('role', 'owner')
         .single();
 
-      if (ownerError || !ownerData) {
+      if (!roleData) {
         toast({
           title: "Error",
-          description: "Owner information not found. Please complete your registration first.",
+          description: "You need to be registered as an owner. Please complete owner registration first.",
           variant: "destructive"
         });
         return;
       }
 
-      // Insert turf data with pending status
+      // Insert turf data
       const turfData = {
+        owner_id: user.id,
         name: data.name,
-        area: data.area,
+        location: data.area,
         address: data.address,
         description: data.description,
-        capacity: data.capacity,
-        base_price_per_hour: data.basePrice,
-        contact_phone: data.contactPhone,
-        contact_email: data.contactEmail,
+        hourly_rate: data.basePrice,
         surface_type: data.surfaceType,
-        supported_sports: data.supportedSports,
+        sport_type: data.supportedSports[0] || 'Multi-sport',
         amenities: data.amenities,
-        peak_hours_start: data.peakHoursStart,
-        peak_hours_end: data.peakHoursEnd,
-        weekend_premium_percentage: data.weekendPremium,
-        peak_hours_premium_percentage: data.peakHoursPremium,
-        owner_id: ownerData.id,
-        status: 'pending_approval', // Set status to pending_approval for admin approval
+        is_approved: false,
+        is_active: true
       };
 
       const { data: insertedTurf, error: turfError } = await supabase
         .from('turfs')
-        .insert(turfData)
+        .insert([turfData])
         .select()
         .single();
 
@@ -149,18 +144,7 @@ const AddTurfForm: React.FC<AddTurfFormProps> = ({ onBack, onSuccess }) => {
         return;
       }
 
-      // Send approval email to admin
-      const { error: emailError } = await supabase.functions.invoke('send-turf-approval-email', {
-        body: {
-          turfData: insertedTurf,
-          ownerData: ownerData
-        }
-      });
-
-      if (emailError) {
-        console.error('Error sending approval email:', emailError);
-        // Don't show error to user as turf was still created successfully
-      }
+      // Turf created successfully (email notification can be added later)
 
       toast({
         title: "Turf Submitted Successfully! 🎉",

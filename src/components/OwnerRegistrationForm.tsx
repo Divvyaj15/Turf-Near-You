@@ -44,24 +44,30 @@ const OwnerRegistrationForm: React.FC<OwnerRegistrationFormProps> = ({ onBack, o
         return;
       }
 
-      // Otherwise, this is updating an existing user (shouldn't happen in new flow, but keeping for safety)
+      // Otherwise, this is updating an existing user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
       }
 
+      // Update profile with business information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          phone_number: formData.contactPhone,
+          location: formData.address
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Add owner role
       const { error } = await supabase
-        .from('turf_owners')
+        .from('user_roles')
         .insert({
           user_id: user.id,
-          business_name: formData.businessName,
-          owner_name: formData.ownerName,
-          business_type: formData.businessType,
-          contact_phone: formData.contactPhone,
-          contact_email: formData.contactEmail,
-          address: formData.address,
-          years_of_operation: formData.yearsOfOperation[0]
+          role: 'owner'
         });
 
       if (error) throw error;
