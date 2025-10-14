@@ -118,7 +118,7 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
       bookingData.start_time = selectedSlot.start_time;
       bookingData.end_time = selectedSlot.end_time;
       bookingData.duration_minutes = selectedSlot.duration_minutes;
-      bookingData.slot_price = selectedSlot.price_per_slot;
+      bookingData.slot_price = selectedSlot.price;
     } else {
       bookingData.start_time = startTime;
       bookingData.end_time = endTime;

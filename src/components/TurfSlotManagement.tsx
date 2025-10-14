@@ -130,7 +130,7 @@ export const TurfSlotManagement: React.FC<TurfSlotManagementProps> = ({ turfId }
             start_time: slot.start,
             end_time: calculateEndTime(slot.start, slot.duration),
             duration_minutes: slot.duration,
-            price_per_slot: parseFloat(bulkData.defaultPrice),
+            price: parseFloat(bulkData.defaultPrice),
             is_available: true,
           };
           promises.push(createSlot.mutateAsync(slotData));

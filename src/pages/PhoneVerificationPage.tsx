@@ -29,7 +29,7 @@ const PhoneVerificationPage = () => {
 
         // Check if user already has verified phone
         const { data: profile, error } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('phone_number, phone_verified')
           .eq('id', user.id)
           .maybeSingle();

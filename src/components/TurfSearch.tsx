@@ -130,16 +130,16 @@ const TurfSearch = ({ onTurfSelect }: TurfSearchProps) => {
   const [selectedSport, setSelectedSport] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<string>('all');
 
-  const areas = [...new Set(turfs.map(turf => turf.area))];
-  const sports = [...new Set(turfs.flatMap(turf => turf.supported_sports || []))];
+  const areas = [...new Set(turfs.map(turf => turf.location))];
+  const sports = [...new Set(turfs.map(turf => turf.sport_type).filter(Boolean))];
 
   const filteredTurfs = turfs.filter(turf => {
     const matchesSearch = turf.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         turf.area.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesArea = selectedArea === 'all' || turf.area === selectedArea;
-    const matchesSport = selectedSport === 'all' || turf.supported_sports?.includes(selectedSport);
+                         turf.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesArea = selectedArea === 'all' || turf.location === selectedArea;
+    const matchesSport = selectedSport === 'all' || turf.sport_type === selectedSport;
     const matchesPrice = priceRange === 'all' || (() => {
-      const price = turf.base_price_per_hour;
+      const price = turf.hourly_rate;
       switch (priceRange) {
         case 'low': return price <= 500;
         case 'medium': return price > 500 && price <= 1000;
