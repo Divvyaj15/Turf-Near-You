@@ -53,21 +53,19 @@ const PlayerProfileSetup = () => {
     setIsLoading(true);
     
     try {
-      // Create user profile
+      // Update or create user profile
       const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: user.id,
+        .from('profiles')
+        .update({
           full_name: formData.fullName,
           phone_number: formData.phoneNumber,
           age: parseInt(formData.age),
           gender: formData.gender,
           location: formData.location,
-          max_travel_distance: parseInt(formData.maxTravelDistance),
-          whatsapp_number: formData.whatsappNumber,
-          preferred_contact: formData.preferredContact,
+          bio: formData.preferredContact,
           is_available: true
-        });
+        })
+        .eq('id', user.id);
 
       if (profileError) throw profileError;
 

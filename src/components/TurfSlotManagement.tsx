@@ -126,7 +126,7 @@ export const TurfSlotManagement: React.FC<TurfSlotManagementProps> = ({ turfId }
         for (const slot of preset.slots) {
           const slotData = {
             turf_id: turfId,
-            day_of_week: day,
+            day_of_week: String(day),
             start_time: slot.start,
             end_time: calculateEndTime(slot.start, slot.duration),
             duration_minutes: slot.duration,
