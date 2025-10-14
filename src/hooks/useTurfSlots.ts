@@ -5,11 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface TurfSlot {
   id: string;
   turf_id: string;
-  day_of_week: number;
+  day_of_week: string | null;
   start_time: string;
   end_time: string;
   duration_minutes: number;
-  price_per_slot: number;
+  price: number;
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -17,11 +17,11 @@ export interface TurfSlot {
 
 export interface CreateTurfSlotData {
   turf_id: string;
-  day_of_week: number;
+  day_of_week?: string;
   start_time: string;
   end_time: string;
   duration_minutes: number;
-  price_per_slot: number;
+  price: number;
   is_available?: boolean;
 }
 
@@ -40,7 +40,7 @@ export const useTurfSlots = (turfId?: string) => {
         .order('start_time');
 
       if (error) throw error;
-      return data as TurfSlot[];
+      return data as any[];
     },
     enabled: !!turfId,
   });
@@ -62,7 +62,7 @@ export const useOwnerTurfSlots = (turfId?: string) => {
         .order('start_time');
 
       if (error) throw error;
-      return data as TurfSlot[];
+      return data as any[];
     },
     enabled: !!turfId && !!user,
   });

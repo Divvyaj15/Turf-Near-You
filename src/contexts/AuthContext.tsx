@@ -35,19 +35,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Use setTimeout to prevent blocking the auth state change
           setTimeout(async () => {
             try {
-              const { data: profile, error } = await supabase
-                .from('profiles')
+              const { data: userRoles, error } = await supabase
+                .from('user_roles')
                 .select('role')
-                .eq('id', session.user.id)
+                .eq('user_id', session.user.id)
                 .maybeSingle();
               
               if (error && error.code !== 'PGRST116') {
-                console.error('Error fetching profile:', error);
+                console.error('Error fetching user role:', error);
               }
               
-              setUserRole(profile?.role || 'customer');
+              setUserRole(userRoles?.role || 'customer');
             } catch (error) {
-              console.error('Error in profile fetch:', error);
+              console.error('Error in role fetch:', error);
               setUserRole('customer');
             }
           }, 0);
@@ -67,19 +67,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
+          const { data: userRoles, error } = await supabase
+            .from('user_roles')
             .select('role')
-            .eq('id', session.user.id)
+            .eq('user_id', session.user.id)
             .maybeSingle();
           
           if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching initial profile:', error);
+            console.error('Error fetching initial user role:', error);
           }
           
-          setUserRole(profile?.role || 'customer');
+          setUserRole(userRoles?.role || 'customer');
         } catch (error) {
-          console.error('Error in initial profile fetch:', error);
+          console.error('Error in initial role fetch:', error);
           setUserRole('customer');
         }
       }

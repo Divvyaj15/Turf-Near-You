@@ -31,11 +31,11 @@ const TurfManagement: React.FC<TurfManagementProps> = ({ turfs, onTurfUpdate }) 
     blockedDates: [] as Date[]
   });
 
-  const handleStatusChange = async (turfId: string, newStatus: 'active' | 'inactive' | 'maintenance') => {
+  const handleStatusChange = async (turfId: string, newActive: boolean) => {
     try {
       const { error } = await supabase
         .from('turfs')
-        .update({ status: newStatus })
+        .update({ is_active: newActive })
         .eq('id', turfId);
 
       if (error) throw error;
@@ -59,7 +59,7 @@ const TurfManagement: React.FC<TurfManagementProps> = ({ turfs, onTurfUpdate }) 
     try {
       const { error } = await supabase
         .from('turfs')
-        .update({ base_price_per_hour: newPrice })
+        .update({ hourly_rate: newPrice })
         .eq('id', turfId);
 
       if (error) throw error;
@@ -74,35 +74,6 @@ const TurfManagement: React.FC<TurfManagementProps> = ({ turfs, onTurfUpdate }) 
       toast({
         title: "Error",
         description: error.message || "Failed to update price",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAvailabilityUpdate = async (turfId: string) => {
-    try {
-      const { error } = await supabase
-        .from('turfs')
-        .update({
-          peak_hours_start: availabilityData.startTime,
-          peak_hours_end: availabilityData.endTime,
-          // Add maintenance days and blocked dates to a separate table if needed
-        })
-        .eq('id', turfId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Availability Updated",
-        description: "Turf availability has been updated successfully.",
-      });
-
-      setIsSettingAvailability(false);
-      onTurfUpdate();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update availability",
         variant: "destructive"
       });
     }
@@ -123,39 +94,35 @@ const TurfManagement: React.FC<TurfManagementProps> = ({ turfs, onTurfUpdate }) 
           <Card key={turf.id} className="overflow-hidden">
             <div className="aspect-video relative">
               <img
-                src={turf.cover_image_url || '/placeholder-turf.jpg'}
+                src={turf.images?.[0] || '/placeholder-turf.jpg'}
                 alt={turf.name}
                 className="w-full h-full object-cover"
               />
               <Badge
                 className={`absolute top-2 right-2 ${
-                  turf.status === 'active'
-                    ? 'bg-green-500'
-                    : turf.status === 'maintenance'
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                  turf.is_active ? 'bg-green-500' : 'bg-red-500'
                 }`}
               >
-                {turf.status || 'inactive'}
+                {turf.is_active ? 'Active' : 'Inactive'}
               </Badge>
             </div>
 
             <CardContent className="p-4">
               <h3 className="font-semibold text-lg mb-2">{turf.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{turf.address}</p>
+              <p className="text-sm text-muted-foreground mb-4">{turf.location}</p>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Base Price</p>
-                  <p className="font-semibold">₹{turf.base_price_per_hour}/hr</p>
+                  <p className="text-sm text-muted-foreground">Hourly Rate</p>
+                  <p className="font-semibold">₹{turf.hourly_rate}/hr</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Sports</p>
-                  <p className="font-semibold">{turf.supported_sports.length} sports</p>
+                  <p className="text-sm text-muted-foreground">Sport Type</p>
+                  <p className="font-semibold">{turf.sport_type || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Amenities</p>
-                  <p className="font-semibold">{turf.amenities.length} amenities</p>
+                  <p className="font-semibold">{turf.amenities?.length || 0} amenities</p>
                 </div>
               </div>
 

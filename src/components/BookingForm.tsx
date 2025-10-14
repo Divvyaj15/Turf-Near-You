@@ -58,9 +58,9 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
       
       return {
         hours: selectedSlot.duration_minutes / 60,
-        baseAmount: selectedSlot.price_per_slot,
+        baseAmount: selectedSlot.price,
         premiumCharges: 0,
-        totalAmount: selectedSlot.price_per_slot
+        totalAmount: selectedSlot.price
       };
     } else {
       // Hourly booking logic (existing)
@@ -72,25 +72,9 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
       if (end <= start) return null;
 
       const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-      const baseAmount = hours * turf.base_price_per_hour;
+      const baseAmount = hours * turf.hourly_rate;
       
       let premiumCharges = 0;
-      
-      // Weekend premium
-      const dayOfWeek = selectedDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        premiumCharges += baseAmount * (turf.weekend_premium_percentage / 100);
-      }
-      
-      // Peak hours premium
-      if (turf.peak_hours_start && turf.peak_hours_end) {
-        const peakStart = new Date(`2000-01-01T${turf.peak_hours_start}`);
-        const peakEnd = new Date(`2000-01-01T${turf.peak_hours_end}`);
-        
-        if (start >= peakStart && end <= peakEnd) {
-          premiumCharges += baseAmount * (turf.peak_hours_premium_percentage / 100);
-        }
-      }
 
       return {
         hours,
@@ -171,9 +155,9 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {turf.cover_image_url && (
+              {turf.images?.[0] && (
                 <img
-                  src={turf.cover_image_url}
+                  src={turf.images[0]}
                   alt={turf.name}
                   className="w-full h-48 object-cover rounded-lg"
                 />
@@ -182,29 +166,29 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
               <div className="space-y-3">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4 mr-2" />
-                  {turf.area}, {turf.address}
+                  {turf.location}
                 </div>
                 
                 <div className="flex items-center text-sm text-muted-foreground">
                   <DollarSign className="w-4 h-4 mr-2" />
-                  ₹{turf.base_price_per_hour}/hour
+                  ₹{turf.hourly_rate}/hour
                 </div>
                 
-                {turf.capacity && (
+                {turf.sport_type && (
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Users className="w-4 h-4 mr-2" />
-                    Up to {turf.capacity} players
+                    {turf.sport_type}
                   </div>
                 )}
               </div>
 
-              {turf.supported_sports.length > 0 && (
+              {turf.amenities && turf.amenities.length > 0 && (
                 <div>
-                  <h4 className="font-medium mb-2">Supported Sports</h4>
+                  <h4 className="font-medium mb-2">Amenities</h4>
                   <div className="flex flex-wrap gap-2">
-                    {turf.supported_sports.map((sport) => (
-                      <Badge key={sport} variant="outline">
-                        {sport}
+                    {turf.amenities.map((amenity) => (
+                      <Badge key={amenity} variant="outline">
+                        {amenity}
                       </Badge>
                     ))}
                   </div>
@@ -311,7 +295,7 @@ const BookingForm = ({ turf, onSuccess, onCancel, onBack }: BookingFormProps) =>
                             <span>
                               {slot.start_time} - {slot.end_time} ({slot.duration_minutes}min)
                             </span>
-                            <span>₹{slot.price_per_slot}</span>
+                            <span>₹{slot.price}</span>
                           </Button>
                         ))
                       )}

@@ -30,8 +30,8 @@ export const useAuthSubmit = () => {
 
       // Find user by phone number first
       const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, phone_verified')
+        .from('profiles')
+        .select('id, phone_verified, email')
         .eq('phone_number', phoneNumber)
         .maybeSingle();
 
@@ -55,22 +55,7 @@ export const useAuthSubmit = () => {
         return;
       }
 
-      // Get user email from profiles table
-      const { data: userProfile, error: userError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', profile.id)
-        .single();
-
-      if (userError || !userProfile) {
-        toast({
-          title: "Error",
-          description: "Unable to find user account details",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
+      const userProfile = profile;
 
       // Sign in with email and password
       const result = await signIn(userProfile.email, password);

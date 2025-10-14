@@ -7,42 +7,31 @@ export interface Booking {
   id: string;
   turf_id: string;
   user_id: string;
+  slot_id: string | null;
   booking_date: string;
   start_time: string;
   end_time: string;
-  total_hours: number;
-  base_price: number;
-  premium_charges: number;
-  total_amount: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  payment_status: 'pending' | 'paid' | 'refunded' | 'failed';
-  player_name: string;
-  player_phone: string;
-  player_email?: string;
-  special_requests?: string;
+  total_price: number;
+  status: string;
+  payment_status: string;
+  notes: string | null;
   created_at: string;
   updated_at: string;
   turfs?: {
     name: string;
-    area: string;
-    address: string;
+    location: string;
   };
 }
 
 export interface CreateBookingData {
   turf_id: string;
   user_id: string;
+  slot_id?: string;
   booking_date: string;
   start_time: string;
   end_time: string;
-  total_hours: number;
-  base_price: number;
-  premium_charges: number;
-  total_amount: number;
-  player_name: string;
-  player_phone: string;
-  player_email?: string;
-  special_requests?: string;
+  total_price: number;
+  notes?: string;
 }
 
 export const useBookings = () => {
@@ -59,15 +48,14 @@ export const useBookings = () => {
           *,
           turfs:turf_id (
             name,
-            area,
-            address
+            location
           )
         `)
         .eq('user_id', user.id)
         .order('booking_date', { ascending: false });
 
       if (error) throw error;
-      return data as Booking[];
+      return data as any[];
     },
     enabled: !!user,
   });
@@ -88,14 +76,13 @@ export const useOwnerBookings = () => {
           *,
           turfs:turf_id (
             name,
-            area,
-            address
+            location
           )
         `)
         .order('booking_date', { ascending: false });
 
       if (error) throw error;
-      return data as Booking[];
+      return data as any[];
     },
     enabled: !!user,
   });

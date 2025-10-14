@@ -8,29 +8,20 @@ export interface Turf {
   owner_id: string;
   name: string;
   description: string | null;
-  address: string;
-  area: string;
-  contact_phone: string | null;
-  contact_email: string | null;
-  supported_sports: string[];
-  amenities: string[];
+  location: string;
+  address: string | null;
+  sport_type: string | null;
   surface_type: string | null;
-  capacity: number | null;
-  cover_image_url: string | null;
-  images: string[];
-  base_price_per_hour: number;
-  weekend_premium_percentage: number;
-  peak_hours_premium_percentage: number;
-  peak_hours_start: string | null;
-  peak_hours_end: string | null;
-  status: string | null;
+  size: string | null;
+  amenities: string[] | null;
+  images: string[] | null;
+  hourly_rate: number;
+  latitude: number | null;
+  longitude: number | null;
+  is_approved: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  turf_owners?: {
-    business_name: string;
-    owner_name: string;
-    contact_phone: string | null;
-  };
 }
 
 export const useTurfs = () => {
@@ -43,14 +34,7 @@ export const useTurfs = () => {
 
       const { data, error } = await supabase
         .from('turfs')
-        .select(`
-          *,
-          turf_owners (
-            business_name,
-            owner_name,
-            contact_phone
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -68,20 +52,10 @@ export const useOwnerTurfs = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // First get the owner ID
-      const { data: ownerData, error: ownerError } = await supabase
-        .from('turf_owners')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (ownerError) throw ownerError;
-
-      // Then get turfs for this owner
       const { data, error } = await supabase
         .from('turfs')
         .select('*')
-        .eq('owner_id', ownerData.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -169,11 +169,11 @@ export const TurfSlotManagement: React.FC<TurfSlotManagementProps> = ({ turfId }
 
     const slotData = {
       turf_id: turfId,
-      day_of_week: parseInt(formData.day_of_week),
+      day_of_week: formData.day_of_week,
       start_time: startTime,
       end_time: endTime,
       duration_minutes: durationMinutes,
-      price_per_slot: parseFloat(formData.price_per_slot),
+      price: parseFloat(formData.price_per_slot),
       is_available: formData.is_available,
     };
 

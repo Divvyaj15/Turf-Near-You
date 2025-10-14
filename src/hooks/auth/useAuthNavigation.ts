@@ -22,8 +22,8 @@ export const useAuthNavigation = () => {
 
           // For customers, check if they have verified their phone
           const { data: profile, error } = await supabase
-            .from('user_profiles')
-            .select('phone_verified')
+            .from('profiles')
+            .select('phone_verified, age, location')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -33,20 +33,8 @@ export const useAuthNavigation = () => {
           }
 
           if (profile?.phone_verified) {
-            // Phone verified, check if they have completed profile setup
-            const { data: fullProfile, error: profileError } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-
-            if (profileError) {
-              console.error('Error checking full profile:', profileError);
-              return;
-            }
-
             // If they have basic info, go to find players, otherwise profile setup
-            if (fullProfile.age && fullProfile.location) {
+            if (profile.age && profile.location) {
               navigate('/find-players');
             } else {
               navigate('/player-profile-setup');
