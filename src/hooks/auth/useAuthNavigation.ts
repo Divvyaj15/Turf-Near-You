@@ -6,21 +6,16 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useAuthNavigation = () => {
   const navigate = useNavigate();
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
 
   // Check if user has a profile and redirect accordingly
   useEffect(() => {
     const checkUserProfile = async () => {
-      if (user && userRole) {
+      if (user) {
         console.log('User authenticated, checking profile...');
         
         try {
-          if (userRole === 'turf_owner') {
-            navigate('/owner-dashboard');
-            return;
-          }
-
-          // For customers, check if they have verified their phone
+          // Check if they have verified their phone
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('phone_verified, age, location')
@@ -49,10 +44,10 @@ export const useAuthNavigation = () => {
       }
     };
 
-    if (user && userRole) {
+    if (user) {
       checkUserProfile();
     }
-  }, [user, userRole, navigate]);
+  }, [user, navigate]);
 
   return {
     navigate

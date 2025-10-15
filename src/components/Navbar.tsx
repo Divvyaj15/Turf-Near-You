@@ -91,21 +91,12 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                {userRole === 'customer' && (
-                  <>
-                    <Link to="/find-players" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                      Find Players
-                    </Link>
-                    <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                      Customer Dashboard
-                    </Link>
-                  </>
-                )}
-                {userRole === 'turf_owner' && (
-                  <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                    Owner Dashboard
-                  </Link>
-                )}
+                <Link to="/find-players" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Find Players
+                </Link>
+                <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Book Turfs
+                </Link>
                 {userRole === 'admin' && (
                   <Link to="/admin-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                     Admin Dashboard

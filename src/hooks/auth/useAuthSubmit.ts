@@ -97,7 +97,7 @@ export const useAuthSubmit = () => {
     
     try {
       // First create the user account
-      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName, 'turf_owner');
+      const result = await signUp(tempUserData.email, tempUserData.password, tempUserData.fullName);
       
       if (result.error) {
         toast({
