@@ -53,6 +53,10 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
         query = query.eq('is_available', true);
       }
 
+      if (filters.location && filters.location.trim() !== '') {
+        query = query.ilike('location', `%${filters.location}%`);
+      }
+
       if (filters.skillLevelMin && filters.skillLevelMax) {
         query = query
           .gte('user_sports_profiles.skill_level', filters.skillLevelMin)
@@ -73,7 +77,11 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
         query = query.gte('overall_rating', filters.minRating);
       }
 
-      const { data, error } = await query.limit(20);
+      if (filters.positions && filters.positions.length > 0) {
+        query = query.overlaps('user_sports_profiles.preferred_positions', filters.positions);
+      }
+
+      const { data, error } = await query.limit(50);
       if (error) throw error;
       return data || [];
     }
