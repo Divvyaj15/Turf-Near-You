@@ -47,11 +47,8 @@ const PlayerList: React.FC<PlayerListProps> = ({ sport, filters, onInvitePlayer 
           )
         `)
         .eq('user_sports_profiles.sport', sport)
-        .eq('user_sports_profiles.is_active', true);
-
-      if (filters.availableNow || filters.availableToday) {
-        query = query.eq('is_available', true);
-      }
+        .eq('user_sports_profiles.is_active', true)
+        .eq('is_available', true);
 
       if (filters.location && filters.location.trim() !== '') {
         query = query.ilike('location', `%${filters.location}%`);
