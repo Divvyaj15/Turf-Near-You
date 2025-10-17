@@ -28,19 +28,18 @@ export const useTurfs = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['turfs', user?.id],
+    queryKey: ['turfs'],
     queryFn: async () => {
-      if (!user) return [];
-
       const { data, error } = await supabase
         .from('turfs')
         .select('*')
+        .eq('is_approved', true)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as Turf[];
     },
-    enabled: !!user,
   });
 };
 

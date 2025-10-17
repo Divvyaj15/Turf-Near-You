@@ -42,9 +42,9 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
-        {turf.cover_image_url && (
+        {turf.images && turf.images.length > 0 && (
           <img
-            src={turf.cover_image_url}
+            src={turf.images[0]}
             alt={turf.name}
             className="w-full h-48 object-cover rounded-lg mb-4"
           />
@@ -55,13 +55,12 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
             <h3 className="text-xl font-semibold">{turf.name}</h3>
             <div className="flex items-center text-sm text-muted-foreground mt-1">
               <MapPin className="w-4 h-4 mr-1" />
-              {turf.area}
+              {turf.location}
             </div>
-            {turf.turf_owners && (
-              <div className="flex items-center text-sm text-muted-foreground mt-1">
-                <Building2 className="w-4 h-4 mr-1" />
-                <span>by {turf.turf_owners.business_name}</span>
-              </div>
+            {turf.address && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {turf.address}
+              </p>
             )}
           </div>
 
@@ -74,12 +73,11 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <DollarSign className="w-4 h-4 mr-1" />
-              <span className="font-semibold">₹{turf.base_price_per_hour}/hour</span>
+              <span className="font-semibold">₹{turf.hourly_rate}/hour</span>
             </div>
-            {turf.capacity && (
+            {turf.size && (
               <div className="flex items-center text-sm text-muted-foreground">
-                <Users className="w-4 h-4 mr-1" />
-                Up to {turf.capacity}
+                <span>{turf.size}</span>
               </div>
             )}
           </div>
@@ -94,18 +92,33 @@ const TurfCard = ({ turf, onBook }: TurfCardProps) => {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1">
-            {turf.supported_sports?.slice(0, 3).map((sport: string) => (
-              <Badge key={sport} variant="outline" className="text-xs">
-                {sport}
+          <div className="flex flex-wrap gap-2">
+            {turf.sport_type && (
+              <Badge variant="secondary" className="text-xs">
+                {turf.sport_type}
               </Badge>
-            ))}
-            {turf.supported_sports?.length > 3 && (
+            )}
+            {turf.surface_type && (
               <Badge variant="outline" className="text-xs">
-                +{turf.supported_sports.length - 3}
+                {turf.surface_type}
               </Badge>
             )}
           </div>
+
+          {turf.amenities && turf.amenities.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {turf.amenities.slice(0, 3).map((amenity: string) => (
+                <Badge key={amenity} variant="outline" className="text-xs">
+                  {amenity}
+                </Badge>
+              ))}
+              {turf.amenities.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{turf.amenities.length - 3} more
+                </Badge>
+              )}
+            </div>
+          )}
 
           <Button 
             className="w-full" 
