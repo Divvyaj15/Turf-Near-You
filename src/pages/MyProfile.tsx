@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, User, Mail, MapPin, Phone, Calendar } from 'lucide-react';
+import { TurfClaimSection } from '@/components/TurfClaimSection';
 
 interface UserProfile {
   id: string;
@@ -110,7 +111,8 @@ export default function MyProfile() {
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
-      <Card>
+      <div className="space-y-6">
+        <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
@@ -169,6 +171,12 @@ export default function MyProfile() {
           )}
         </CardContent>
       </Card>
+
+      <TurfClaimSection 
+        userId={user?.id || ''} 
+        hasOwnerRole={userRole === 'owner'} 
+      />
+      </div>
     </div>
   );
 }

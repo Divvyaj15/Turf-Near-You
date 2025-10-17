@@ -261,7 +261,7 @@ export type Database = {
           location: string
           longitude: number | null
           name: string
-          owner_id: string
+          owner_id: string | null
           size: string | null
           sport_type: string | null
           surface_type: string | null
@@ -281,7 +281,7 @@ export type Database = {
           location: string
           longitude?: number | null
           name: string
-          owner_id: string
+          owner_id?: string | null
           size?: string | null
           sport_type?: string | null
           surface_type?: string | null
@@ -301,7 +301,7 @@ export type Database = {
           location?: string
           longitude?: number | null
           name?: string
-          owner_id?: string
+          owner_id?: string | null
           size?: string | null
           sport_type?: string | null
           surface_type?: string | null
