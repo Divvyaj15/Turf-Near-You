@@ -6,8 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, Mail, MapPin, Phone, Calendar } from 'lucide-react';
+import { Loader2, User, Mail, MapPin, Phone, Calendar, Edit } from 'lucide-react';
 import { TurfClaimSection } from '@/components/TurfClaimSection';
+import { ProfileEditForm } from '@/components/ProfileEditForm';
 
 interface UserProfile {
   id: string;
@@ -27,6 +28,7 @@ export default function MyProfile() {
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -116,14 +118,33 @@ export default function MyProfile() {
         <CardHeader>
           <div className="flex justify-between items-start">
             <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
-            {profile.is_available !== null && (
-              <Button onClick={toggleAvailability} variant="outline">
-                {profile.is_available ? 'Mark Unavailable' : 'Mark Available'}
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {!isEditing && (
+                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              )}
+              {profile.is_available !== null && (
+                <Button onClick={toggleAvailability} variant="outline" size="sm">
+                  {profile.is_available ? 'Mark Unavailable' : 'Mark Available'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isEditing ? (
+            <ProfileEditForm
+              profile={profile}
+              onSuccess={() => {
+                setIsEditing(false);
+                fetchProfile();
+              }}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <>
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-muted-foreground" />
             <span>{profile.email}</span>
@@ -168,6 +189,8 @@ export default function MyProfile() {
             <div>
               <Badge variant="secondary">{userRole}</Badge>
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>

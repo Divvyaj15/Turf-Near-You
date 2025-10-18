@@ -66,13 +66,13 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
 
       if (updateError) throw updateError;
 
-      // Grant owner role if they don't have it
+      // Grant owner role if they don't have it using secure function
       if (!hasOwnerRole) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: userId, role: 'owner' });
+        const { error: roleError } = await supabase.rpc('grant_owner_role_to_user', {
+          target_user_id: userId
+        });
 
-        if (roleError && roleError.code !== '23505') { // Ignore duplicate error
+        if (roleError) {
           throw roleError;
         }
       }
