@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, DollarSign, Calendar, Users, Lock } from "lucide-react";
+import { Building2, DollarSign, Calendar, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TurfSlotManagement } from "@/components/TurfSlotManagement";
@@ -20,57 +18,44 @@ const OwnerDashboard = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   
-  const [turfId, setTurfId] = useState(searchParams.get('turf_id') || '');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [turf, setTurf] = useState<Turf | null>(null);
+  const [ownedTurfs, setOwnedTurfs] = useState<Turf[]>([]);
+  const [selectedTurf, setSelectedTurf] = useState<Turf | null>(null);
   const [bookings, setBookings] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleVerifyTurfId = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!turfId.trim()) {
-      toast({
-        title: "Turf ID required",
-        description: "Please enter your turf unique ID",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const fetchOwnerTurfs = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('turfs')
         .select('*')
-        .eq('id', turfId)
-        .maybeSingle();
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      if (!data) {
+      if (data && data.length > 0) {
+        setOwnedTurfs(data as Turf[]);
+        // Auto-select first turf or the one from URL
+        const urlTurfId = searchParams.get('turf_id');
+        const turfToSelect = urlTurfId 
+          ? data.find(t => t.id === urlTurfId) || data[0]
+          : data[0];
+        setSelectedTurf(turfToSelect as Turf);
+      } else {
         toast({
-          title: "Invalid Turf ID",
-          description: "No turf found with this ID. Please check and try again.",
+          title: "No turfs found",
+          description: "You haven't claimed any turfs yet. Please claim a turf from your profile.",
           variant: "destructive"
         });
-        return;
       }
-
-      setTurf(data as Turf);
-      setIsAuthorized(true);
-      
-      // Update URL with turf_id
-      navigate(`/owner-dashboard?turf_id=${turfId}`, { replace: true });
-      
-      toast({
-        title: "Access granted!",
-        description: `Welcome to ${data.name} dashboard`,
-      });
     } catch (error: any) {
-      console.error('Error verifying turf ID:', error);
+      console.error('Error fetching owner turfs:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to verify turf ID",
+        description: "Failed to load your turfs",
         variant: "destructive"
       });
     } finally {
@@ -83,35 +68,24 @@ const OwnerDashboard = () => {
       navigate('/auth');
       return;
     }
-
-    // Auto-verify if turf_id is in URL
-    const urlTurfId = searchParams.get('turf_id');
-    if (urlTurfId && !isAuthorized) {
-      setTurfId(urlTurfId);
-      // Trigger verification
-      setTimeout(() => {
-        const form = document.querySelector('form');
-        if (form) {
-          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-        }
-      }, 100);
-    }
-  }, [user, navigate, searchParams, isAuthorized]);
+    
+    fetchOwnerTurfs();
+  }, [user, navigate]);
 
   useEffect(() => {
-    if (isAuthorized && turf) {
+    if (selectedTurf) {
       fetchBookings();
     }
-  }, [isAuthorized, turf]);
+  }, [selectedTurf]);
 
   const fetchBookings = async () => {
-    if (!turf) return;
+    if (!selectedTurf) return;
 
     try {
       const { data, error } = await supabase
         .from('bookings')
         .select('*')
-        .eq('turf_id', turf.id)
+        .eq('turf_id', selectedTurf.id)
         .order('booking_date', { ascending: false });
 
       if (error) throw error;
@@ -121,39 +95,36 @@ const OwnerDashboard = () => {
     }
   };
 
-  // If not authorized, show turf ID input
-  if (!isAuthorized) {
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your turfs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no turfs owned, show message
+  if (ownedTurfs.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-primary" />
+              <Building2 className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Owner Dashboard Access</CardTitle>
+            <CardTitle className="text-2xl">No Turfs Found</CardTitle>
             <CardDescription>
-              Enter your unique turf ID to access the dashboard
+              You haven't claimed any turfs yet. Visit your profile to claim a turf.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleVerifyTurfId} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="turfId">Turf Unique ID</Label>
-                <Input
-                  id="turfId"
-                  placeholder="Enter your turf ID"
-                  value={turfId}
-                  onChange={(e) => setTurfId(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your turf ID was provided to you by the administrator
-                </p>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Verifying...' : 'Access Dashboard'}
-              </Button>
-            </form>
+            <Button onClick={() => navigate('/my-profile')} className="w-full">
+              Go to Profile
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -173,15 +144,30 @@ const OwnerDashboard = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            {turf?.name || 'Turf'} Dashboard
+            {selectedTurf?.name || 'Turf'} Dashboard
           </h1>
           <p className="text-gray-600 mt-1">
             Manage your turf, slots, and bookings
           </p>
         </div>
-        <Badge variant="outline" className="text-sm">
-          Turf ID: {turfId}
-        </Badge>
+        <div className="flex items-center gap-4">
+          {ownedTurfs.length > 1 && (
+            <select
+              value={selectedTurf?.id}
+              onChange={(e) => {
+                const turf = ownedTurfs.find(t => t.id === e.target.value);
+                if (turf) setSelectedTurf(turf);
+              }}
+              className="px-3 py-2 border rounded-md"
+            >
+              {ownedTurfs.map(turf => (
+                <option key={turf.id} value={turf.id}>
+                  {turf.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -222,8 +208,8 @@ const OwnerDashboard = () => {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Badge variant={turf?.is_approved ? "default" : "secondary"}>
-              {turf?.is_approved ? 'Approved' : 'Pending'}
+            <Badge variant={selectedTurf?.is_approved ? "default" : "secondary"}>
+              {selectedTurf?.is_approved ? 'Approved' : 'Pending'}
             </Badge>
           </CardContent>
         </Card>
@@ -256,7 +242,7 @@ const OwnerDashboard = () => {
               <CardDescription>Configure available time slots for your turf</CardDescription>
             </CardHeader>
             <CardContent>
-              {turf && <TurfSlotManagement turfId={turf.id} />}
+              {selectedTurf && <TurfSlotManagement turfId={selectedTurf.id} />}
             </CardContent>
           </Card>
         </TabsContent>
@@ -271,40 +257,40 @@ const OwnerDashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{turf?.name}</p>
+                  <p className="font-medium">{selectedTurf?.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">{turf?.location}</p>
+                  <p className="font-medium">{selectedTurf?.location}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Sport Type</p>
-                  <p className="font-medium">{turf?.sport_type || 'N/A'}</p>
+                  <p className="font-medium">{selectedTurf?.sport_type || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Surface Type</p>
-                  <p className="font-medium">{turf?.surface_type || 'N/A'}</p>
+                  <p className="font-medium">{selectedTurf?.surface_type || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Hourly Rate</p>
-                  <p className="font-medium">₹{turf?.hourly_rate}</p>
+                  <p className="font-medium">₹{selectedTurf?.hourly_rate}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Size</p>
-                  <p className="font-medium">{turf?.size || 'N/A'}</p>
+                  <p className="font-medium">{selectedTurf?.size || 'N/A'}</p>
                 </div>
               </div>
-              {turf?.description && (
+              {selectedTurf?.description && (
                 <div>
                   <p className="text-sm text-muted-foreground">Description</p>
-                  <p className="text-sm mt-1">{turf.description}</p>
+                  <p className="text-sm mt-1">{selectedTurf.description}</p>
                 </div>
               )}
-              {turf?.amenities && turf.amenities.length > 0 && (
+              {selectedTurf?.amenities && selectedTurf.amenities.length > 0 && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Amenities</p>
                   <div className="flex flex-wrap gap-2">
-                    {turf.amenities.map((amenity, index) => (
+                    {selectedTurf.amenities.map((amenity, index) => (
                       <Badge key={index} variant="secondary">{amenity}</Badge>
                     ))}
                   </div>

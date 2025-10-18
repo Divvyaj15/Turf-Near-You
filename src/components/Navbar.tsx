@@ -97,6 +97,11 @@ const Navbar = () => {
                 <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   Book Turfs
                 </Link>
+                {userRole === 'owner' && (
+                  <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                    Owner Dashboard
+                  </Link>
+                )}
                 {userRole === 'admin' && (
                   <Link to="/admin-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                     Admin Dashboard
