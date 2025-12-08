@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -6,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const Navbar = () => {
@@ -14,17 +13,43 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userFullName, setUserFullName] = useState<string>('');
+  const [hasOwnedTurfs, setHasOwnedTurfs] = useState(false);
+
+  // Check if user owns any turfs
+  useEffect(() => {
+    const checkOwnedTurfs = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('turfs')
+            .select('id')
+            .eq('owner_id', user.id)
+            .limit(1);
+          
+          if (!error && data && data.length > 0) {
+            setHasOwnedTurfs(true);
+          } else {
+            setHasOwnedTurfs(false);
+          }
+        } catch (error) {
+          setHasOwnedTurfs(false);
+        }
+      } else {
+        setHasOwnedTurfs(false);
+      }
+    };
+
+    checkOwnedTurfs();
+  }, [user]);
 
   // Get user's full name from user metadata or profiles table
   useEffect(() => {
     const fetchUserName = async () => {
       if (user) {
-        // First try to get from user metadata
         const metaName = user.user_metadata?.full_name;
         if (metaName) {
           setUserFullName(metaName);
         } else {
-          // Fallback to profiles table
           try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -35,7 +60,6 @@ const Navbar = () => {
             if (profile?.full_name) {
               setUserFullName(profile.full_name);
             } else {
-              // Fallback to email name part
               setUserFullName(user.email?.split('@')[0] || 'User');
             }
           } catch (error) {
@@ -67,7 +91,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
@@ -97,8 +121,9 @@ const Navbar = () => {
                 <Link to="/customer-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
                   Book Turfs
                 </Link>
-                {userRole === 'owner' && (
-                  <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                {hasOwnedTurfs && (
+                  <Link to="/owner-dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1">
+                    <Building2 className="w-4 h-4" />
                     Owner Dashboard
                   </Link>
                 )}
@@ -127,7 +152,7 @@ const Navbar = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56 bg-white" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{userFullName || 'User'}</p>
@@ -141,6 +166,13 @@ const Navbar = () => {
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
+                  {hasOwnedTurfs && (
+                    <DropdownMenuItem onClick={() => navigate('/owner-dashboard')}>
+                      <Building2 className="mr-2 h-4 w-4" />
+                      Owner Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
