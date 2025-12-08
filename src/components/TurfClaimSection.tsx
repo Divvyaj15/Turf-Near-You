@@ -1,28 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Building2, Loader2 } from 'lucide-react';
+import { Building2, Loader2, Check } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TurfClaimSectionProps {
   userId: string;
   hasOwnerRole: boolean;
+  onTurfClaimed?: () => void;
 }
 
-export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps) {
-  const [turfId, setTurfId] = useState('');
+interface UnclaimedTurf {
+  id: string;
+  name: string;
+  location: string;
+}
+
+export function TurfClaimSection({ userId, hasOwnerRole, onTurfClaimed }: TurfClaimSectionProps) {
+  const [selectedTurfId, setSelectedTurfId] = useState('');
+  const [unclaimedTurfs, setUnclaimedTurfs] = useState<UnclaimedTurf[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    fetchUnclaimedTurfs();
+  }, []);
+
+  const fetchUnclaimedTurfs = async () => {
+    setIsFetching(true);
+    try {
+      const { data, error } = await supabase
+        .from('turfs')
+        .select('id, name, location')
+        .is('owner_id', null)
+        .eq('is_approved', true)
+        .order('name');
+
+      if (error) throw error;
+      setUnclaimedTurfs(data || []);
+    } catch (error) {
+      console.error('Error fetching unclaimed turfs:', error);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   const handleClaimTurf = async () => {
-    if (!turfId.trim()) {
+    if (!selectedTurfId) {
       toast({
         title: "Error",
-        description: "Please enter a valid Turf ID",
+        description: "Please select a turf to claim",
         variant: "destructive"
       });
       return;
@@ -31,11 +63,11 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
     setIsLoading(true);
 
     try {
-      // Check if turf exists and is unclaimed
+      // Double-check turf is still unclaimed
       const { data: turf, error: fetchError } = await supabase
         .from('turfs')
         .select('id, name, owner_id')
-        .eq('id', turfId.trim())
+        .eq('id', selectedTurfId)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
@@ -43,9 +75,10 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
       if (!turf) {
         toast({
           title: "Error",
-          description: "Turf ID not found. Please check and try again.",
+          description: "Turf not found. Please refresh and try again.",
           variant: "destructive"
         });
+        await fetchUnclaimedTurfs();
         return;
       }
 
@@ -55,6 +88,8 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
           description: "This turf has already been claimed by another owner.",
           variant: "destructive"
         });
+        await fetchUnclaimedTurfs();
+        setSelectedTurfId('');
         return;
       }
 
@@ -62,7 +97,7 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
       const { error: updateError } = await supabase
         .from('turfs')
         .update({ owner_id: userId })
-        .eq('id', turfId.trim());
+        .eq('id', selectedTurfId);
 
       if (updateError) throw updateError;
 
@@ -73,7 +108,7 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
         });
 
         if (roleError) {
-          throw roleError;
+          console.error('Role grant error:', roleError);
         }
       }
 
@@ -82,9 +117,14 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
         description: `You have successfully claimed ${turf.name}`,
       });
 
+      // Notify parent component
+      if (onTurfClaimed) {
+        onTurfClaimed();
+      }
+
       // Redirect to owner dashboard
       setTimeout(() => {
-        navigate(`/owner-dashboard?turf_id=${turfId.trim()}`);
+        navigate(`/owner-dashboard?turf_id=${selectedTurfId}`);
       }, 1000);
 
     } catch (error: any) {
@@ -99,23 +139,31 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
     }
   };
 
-  if (hasOwnerRole) {
+  if (isFetching) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading available turfs...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (unclaimedTurfs.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5" />
-            Turf Owner Dashboard
+            Claim Your Turf
           </CardTitle>
           <CardDescription>
-            You already have owner access. Visit your dashboard to manage your turfs.
+            No turfs available for claiming at the moment. Please check back later.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button onClick={() => navigate('/owner-dashboard')}>
-            Go to Owner Dashboard
-          </Button>
-        </CardContent>
       </Card>
     );
   }
@@ -128,28 +176,36 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
           Claim Your Turf
         </CardTitle>
         <CardDescription>
-          Are you a turf owner? Enter your unique Turf ID to claim ownership and access the owner dashboard.
+          Select your turf from the list below to claim ownership and access the owner dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="turfId" className="text-sm font-medium">
-            Turf ID
+          <label htmlFor="turfSelect" className="text-sm font-medium">
+            Select Turf
           </label>
-          <Input
-            id="turfId"
-            placeholder="e.g., 550e8400-e29b-41d4-a716-446655440001"
-            value={turfId}
-            onChange={(e) => setTurfId(e.target.value)}
-            disabled={isLoading}
-          />
+          <Select value={selectedTurfId} onValueChange={setSelectedTurfId}>
+            <SelectTrigger className="w-full bg-background">
+              <SelectValue placeholder="Choose your turf..." />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              {unclaimedTurfs.map((turf) => (
+                <SelectItem key={turf.id} value={turf.id}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{turf.name}</span>
+                    <span className="text-xs text-muted-foreground">{turf.location}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
-            Enter the unique ID provided for your turf facility
+            {unclaimedTurfs.length} turf(s) available for claiming
           </p>
         </div>
         <Button 
           onClick={handleClaimTurf} 
-          disabled={isLoading || !turfId.trim()}
+          disabled={isLoading || !selectedTurfId}
           className="w-full"
         >
           {isLoading ? (
@@ -158,7 +214,10 @@ export function TurfClaimSection({ userId, hasOwnerRole }: TurfClaimSectionProps
               Claiming Turf...
             </>
           ) : (
-            'Claim Turf'
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Claim Turf
+            </>
           )}
         </Button>
       </CardContent>
