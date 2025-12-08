@@ -11,9 +11,10 @@ import { TurfSlotManagement } from "@/components/TurfSlotManagement";
 import BookingManagement from "@/components/BookingManagement";
 import { useToast } from "@/hooks/use-toast";
 import { Turf } from "@/hooks/useTurfs";
+import { TurfClaimSection } from "@/components/TurfClaimSection";
 
 const OwnerDashboard = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -45,11 +46,8 @@ const OwnerDashboard = () => {
           : data[0];
         setSelectedTurf(turfToSelect as Turf);
       } else {
-        toast({
-          title: "No turfs found",
-          description: "You haven't claimed any turfs yet. Please claim a turf from your profile.",
-          variant: "destructive"
-        });
+        setOwnedTurfs([]);
+        setSelectedTurf(null);
       }
     } catch (error: any) {
       console.error('Error fetching owner turfs:', error);
@@ -107,26 +105,21 @@ const OwnerDashboard = () => {
     );
   }
 
-  // If no turfs owned, show message
+  // If no turfs owned, show claim section
   if (ownedTurfs.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <Building2 className="w-8 h-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">No Turfs Found</CardTitle>
-            <CardDescription>
-              You haven't claimed any turfs yet. Visit your profile to claim a turf.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/my-profile')} className="w-full">
-              Go to Profile
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+        <div className="container mx-auto max-w-2xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Owner Dashboard</h1>
+            <p className="text-gray-600 mt-2">Claim a turf to get started</p>
+          </div>
+          <TurfClaimSection 
+            userId={user?.id || ''} 
+            hasOwnerRole={userRole === 'owner'}
+            onTurfClaimed={fetchOwnerTurfs}
+          />
+        </div>
       </div>
     );
   }
