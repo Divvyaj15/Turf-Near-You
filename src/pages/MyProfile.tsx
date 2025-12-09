@@ -29,6 +29,7 @@ export default function MyProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [hasOwnedTurfs, setHasOwnedTurfs] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,7 +38,25 @@ export default function MyProfile() {
     }
 
     fetchProfile();
+    checkOwnedTurfs();
   }, [user, navigate]);
+
+  const checkOwnedTurfs = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('turfs')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        setHasOwnedTurfs(true);
+      }
+    } catch (error) {
+      console.error('Error checking owned turfs:', error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -195,10 +214,13 @@ export default function MyProfile() {
         </CardContent>
       </Card>
 
-      <TurfClaimSection 
-        userId={user?.id || ''} 
-        hasOwnerRole={userRole === 'owner'} 
-      />
+      {!hasOwnedTurfs && (
+        <TurfClaimSection 
+          userId={user?.id || ''} 
+          hasOwnerRole={userRole === 'owner'}
+          onTurfClaimed={() => setHasOwnedTurfs(true)}
+        />
+      )}
       </div>
     </div>
   );
