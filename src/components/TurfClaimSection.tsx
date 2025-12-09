@@ -90,9 +90,9 @@ export function TurfClaimSection({ userId, hasOwnerRole, onTurfClaimed }: TurfCl
         onTurfClaimed();
       }
 
-      // Redirect to owner dashboard
+      // Redirect to owner dashboard with full page reload to update navbar
       setTimeout(() => {
-        navigate(`/owner-dashboard?turf_id=${turfId.trim()}`);
+        window.location.href = `/owner-dashboard?turf_id=${turfId.trim()}`;
       }, 1000);
 
     } catch (error: any) {
